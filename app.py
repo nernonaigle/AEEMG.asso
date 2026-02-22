@@ -4,10 +4,7 @@ from supabase import create_client
 url = ""
 key = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
 
-try:
 supabase = create_client(url, key)
-except Exception as e:
-st.error("Erreur de connexion")
 
 st.set_page_config(page_title="Mon Association", page_icon="🤝", layout="wide")
 
