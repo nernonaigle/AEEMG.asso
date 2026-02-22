@@ -1,7 +1,3 @@
-Oups ! Il est possible que le bloc de code précédent ne soit pas apparu correctement sur ton écran. Je vais te le redonner en texte brut, sans aucun bloc gris, pour être sûr que tu puisses tout copier facilement.
-
-Voici le code à copier (de la première à la dernière ligne) :
-
 import streamlit as st
 from supabase import create_client
 
