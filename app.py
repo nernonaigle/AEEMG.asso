@@ -18,5 +18,5 @@ nom = st.text_input("Votre Nom")
 prenom = st.text_input("Votre Prénom")
 email = st.text_input("Votre Email")
 
-if st.button("Envoyer mon inscription"):
-st.success("Bravo ! Inscription enregistrée.")
+st.warning("Cliquez ci-dessous pour valider :")
+st.button("Envoyer mon inscription")
