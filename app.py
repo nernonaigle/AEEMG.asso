@@ -1,85 +1,37 @@
-import streamlit as st
-from supabase import create_client
+# --- 🎨 DESIGN "ÉMERAUDE & MOSQUÉE" ---
+st.set_page_config(page_title="AEEMG - Espace Membre", page_icon="🌙", layout="wide")
 
-v_url = ""
-v_key = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
-supabase = create_client(v_url, v_key)
+# Utilisation de f-string pour éviter les conflits de caractères
+css_style = """
+    <style>
+    .stApp {
+        background: linear-gradient(rgba(18, 54, 38, 0.9), rgba(18, 54, 38, 0.9)), 
+                    url("https://images.unsplash.com/photo-1590076214667-cda9e7b1ff34?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
 
-st.set_page_config(page_title="AEEMG", page_icon="🌙", layout="wide")
+    /* Style des conteneurs transparents */
+    [data-testid="stForm"], [data-testid="stMetric"], .stChatMessage {
+        background: rgba(255, 255, 255, 0.1) !important;
+        backdrop-filter: blur(15px);
+        border-radius: 20px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        padding: 20px !important;
+    }
 
-st.markdown("""
+    h1, h2, h3, label, p, span {
+        color: white !important;
+    }
 
-<style>
-.stApp {
-background: linear-gradient(rgba(18, 54, 38, 0.85), rgba(18, 54, 38, 0.85)),
-url("");
-background-size: cover;
-background-position: center;
-background-attachment: fixed;
-}
-[data-testid="stForm"], [data-testid="stMetric"] {
-background: rgba(255, 255, 255, 0.1) !important;
-backdrop-filter: blur(15px);
-border-radius: 20px !important;
-border: 1px solid rgba(255, 255, 255, 0.2) !important;
-padding: 20px !important;
-}
-h1, h2, h3, label, p, span { color: white !important; }
-.stButton>button {
-background-color: #2D6A4F !important;
-color: white !important;
-border-radius: 12px;
-height: 3em;
-}
-[data-testid="stSidebar"] { background-color: rgba(8, 28, 21, 0.95) !important; }
-</style>
-
-""", unsafe_allow_html=True)
-
-if "connecte" not in st.session_state:
-st.session_state.connecte = False
-st.session_state.user_info = None
-
-with st.sidebar:
-st.markdown("<h1 style='text-align: center;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
-if not st.session_state.connecte:
-menu = st.radio("Navigation", ["Connexion", "Inscription"])
-else:
-st.success(f"Bienvenue")
-menu = st.radio("Espace Privé", ["Tableau de Bord", "Cotisations", "Déconnexion"])
-
-if menu == "Inscription":
-st.title("✨ Inscription")
-with st.form("ins"):
-n = st.text_input("Nom")
-p = st.text_input("Prénom")
-e = st.text_input("Email")
-pwd = st.text_input("Mot de passe", type="password")
-if st.form_submit_button("S'inscrire"):
-supabase.table("membres").insert({"nom":n,"prenom":p,"email":e,"password":pwd,"cotisation":False}).execute()
-st.success("Compte créé !")
-
-elif menu == "Connexion":
-st.title("🔑 Connexion")
-e_l = st.text_input("Email")
-p_l = st.text_input("Mot de passe", type="password")
-if st.button("Se connecter"):
-res = supabase.table("membres").select("*").eq("email", e_l).eq("password", p_l).execute()
-if res.data:
-st.session_state.connecte = True
-st.session_state.user_info = res.data[0]
-st.rerun()
-else:
-st.error("Identifiants incorrects")
-
-elif menu == "Tableau de Bord":
-if st.session_state.connecte:
-u = st.session_state.user_info
-st.title(f"👋 Paix sur toi, {u['prenom']}")
-c1, c2 = st.columns(2)
-c1.metric("Statut", "Actif")
-c2.metric("Cotisation", "Payée" if u.get('cotisation') else "À régler")
-
-elif menu == "Déconnexion":
-st.session_state.connecte = False
-st.rerun()
+    .stButton>button {
+        background-color: #2D6A4F !important;
+        color: white !important;
+        border-radius: 12px;
+        border: 1px solid #40916C;
+        font-weight: bold;
+    }
+    </style>
+"""
+st.markdown(css_style, unsafe_allow_html=True)
