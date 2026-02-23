@@ -37,7 +37,7 @@ font-weight: bold;
 """, unsafe_allow_html=True)
 
 if "connecte" not in st.session_state:
-st.session_state.connecte = False
+    st.session_state.connecte = False
 st.session_state.user_info = None
 
 with st.sidebar:
