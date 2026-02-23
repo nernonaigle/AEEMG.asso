@@ -14,7 +14,7 @@ st.markdown("""
 <style>
 .stApp {
 background: linear-gradient(rgba(18, 54, 38, 0.7), rgba(18, 54, 38, 0.7)),
-url("") no-repeat center center fixed;
+url("WhatsApp Image 2026-02-14 at 18.08.42.jpeg") no-repeat center center fixed;
 background-size: cover !important;
 }
 </style>
