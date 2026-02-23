@@ -18,8 +18,14 @@ st.sidebar.title("AEEMG")
 if not st.session_state.connecte:
     menu = st.sidebar.radio("Menu", ["Connexion", "S'inscrire"])
 else:
-    menu = st.sidebar.radio("Menu", ["🏠 Tableau de Bord", "💳 Cotisations", "🚪 Déconnexion"])
-
+    options = ["🏠 Tableau de Bord", "💳 Cotisations"]
+    
+    # VERIFICATION ADMIN : Remplace par ton vrai email
+    if st.session_state.user_info['email'] == "ton-email@gmail.com":
+        options.append("👑 Administration")
+        
+    options.append("🚪 Déconnexion")
+    menu = st.sidebar.radio("Menu", options)
 # --- LOGIQUE ---
 if menu == "🚪 Déconnexion":
     st.session_state.connecte = False
