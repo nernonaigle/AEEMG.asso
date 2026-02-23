@@ -19,6 +19,9 @@ prenom = st.text_input("Votre Prénom")
 email = st.text_input("Votre Email")
 
 if st.button("Envoyer mon inscription"):
-    data = {"nom": nom, "prenom": prenom, "email": email}
-    supabase.table("membres").insert(data).execute()
-    st.success("Félicitations ! Tu es bien inscrit.")
+    try:
+        data = {"nom": nom, "prenom": prenom, "email": email}
+        supabase.table("membres").insert(data).execute()
+        st.success("Félicitations !")
+    except Exception as e:
+        st.error(f"Détail de l'erreur : {e}")
