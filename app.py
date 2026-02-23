@@ -8,27 +8,28 @@ supabase = create_client(v_url, v_key)
 st.set_page_config(page_title="AEEMG")
 st.title("🤝 AEEMG Association")
 
-st.header("📢 Fil d'actualité")
-st.write("Bienvenue sur l'espace officiel de l'AEEMG !")
+st.header("📝 Inscription")
+nom = st.text_input("Nom")
+prenom = st.text_input("Prénom")
+email = st.text_input("Email")
+
+if st.button("Envoyer"):
+try:
+data = {"nom": nom, "prenom": prenom, "email": email}
+supabase.table("membres").insert(data).execute()
+st.success(f"Inscrit : {prenom}")
+except Exception as e:
+st.error(f"Erreur : {e}")
 
 st.divider()
 
-st.header("📝 Inscription")
-nom = st.text_input("Votre Nom")
-prenom = st.text_input("Votre Prénom")
-email = st.text_input("Votre Email")
-
-if st.button("Envoyer mon inscription"):
-    try:
-        data = {"nom": nom, "prenom": prenom, "email": email}
-        # On stocke la réponse de Supabase
-        reponse = supabase.table("membres").insert(data).execute()
-        
-        # On vérifie si Supabase renvoie bien une donnée
-        if len(reponse.data) > 0:
-            st.success(f"Bravo ! {prenom} est bien enregistré dans la base.")
-        else:
-            st.error("Le site dit OK, mais la base de données est restée vide.")
-            
-    except Exception as e:
-        st.error(f"Erreur technique : {e}")
+st.subheader("📊 Liste des membres en base")
+try:
+reponse = supabase.table("membres").select("*").execute()
+if reponse.data:
+for membre in reponse.data:
+st.write(f"✅ {membre.get('prenom')} {membre.get('nom')} ({membre.get('email')})")
+else:
+st.info("Aucun membre trouvé dans la base pour le moment.")
+except Exception as e:
+st.error("Impossible de lire la base.")
