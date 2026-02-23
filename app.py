@@ -1,11 +1,16 @@
 import streamlit as st
 from supabase import create_client
 
-supabase = create_client("", "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0")
+On remplit bien les deux zones entre guillemets :
+url_supabase = ""
+cle_supabase = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
+
+Connexion
+supabase = create_client(url_supabase, cle_supabase)
 
 st.title("🤝 AEEMG Association")
-st.success("Bravo ! La connexion est enfin établie.")
+st.success("Connexion réussie !")
 
 tab1, tab2 = st.tabs(["Accueil", "Profil"])
-with tab1: st.write("Bienvenue sur le fil d'actualité de l'AEEMG.")
-with tab2: st.write("Ici, tu pourras modifier ton profil.")
+with tab1: st.write("Bienvenue sur le fil d'actualité.")
+with tab2: st.write("Page de profil.")
