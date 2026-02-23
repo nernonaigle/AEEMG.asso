@@ -18,5 +18,7 @@ nom = st.text_input("Votre Nom")
 prenom = st.text_input("Votre Prénom")
 email = st.text_input("Votre Email")
 
-st.warning("Cliquez ci-dessous pour valider :")
-st.button("Envoyer mon inscription")
+if st.button("Envoyer mon inscription"):
+data = {"nom": nom, "prenom": prenom, "email": email}
+supabase.table("membres").insert(data).execute()
+st.success("Félicitations ! Tu es bien inscrit.")
