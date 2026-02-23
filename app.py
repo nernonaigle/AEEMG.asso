@@ -1,3 +1,6 @@
+import streamlit as st
+from supabase import create_client
+
 v_url = "https://ryfrekltrgaqyryzozhc.supabase.co"
 v_key = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
 
