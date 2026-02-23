@@ -17,16 +17,6 @@ background: linear-gradient(rgba(18, 54, 38, 0.7), rgba(18, 54, 38, 0.7)),
 url("") no-repeat center center fixed;
 background-size: cover !important;
 }
-
-[data-testid="stHeader"] {
-background-color: rgba(0,0,0,0) !important;
-}
-
-[data-testid="stForm"] {
-background: rgba(255, 255, 255, 0.1) !important;
-backdrop-filter: blur(10px);
-border: 1px solid rgba(255, 255, 255, 0.2);
-}
 </style>
 
 """, unsafe_allow_html=True)
