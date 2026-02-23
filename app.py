@@ -13,7 +13,7 @@ st.markdown("""
 
 <style>
 .stApp {
-background: linear-gradient(rgba(18, 54, 38, 0.85), rgba(18, 54, 38, 0.85)),
+background: linear-gradient(rgba(18, 54, 38, 0.9), rgba(18, 54, 38, 0.9)),
 url("");
 background-size: cover;
 background-position: center;
@@ -23,16 +23,9 @@ background-attachment: fixed;
 background: rgba(255, 255, 255, 0.1) !important;
 backdrop-filter: blur(15px);
 border-radius: 20px !important;
-border: 1px solid rgba(255, 255, 255, 0.2) !important;
 padding: 20px !important;
 }
 h1, h2, h3, label, p, span { color: white !important; }
-.stButton>button {
-background-color: #2D6A4F !important;
-color: white !important;
-border-radius: 12px;
-}
-[data-testid="stSidebar"] { background-color: rgba(8, 28, 21, 0.95) !important; }
 </style>
 
 """, unsafe_allow_html=True)
