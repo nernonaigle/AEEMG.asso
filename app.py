@@ -5,34 +5,19 @@ url = ""
 key = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
 supabase = create_client(url, key)
 
-st.set_page_config(page_title="AEEMG Association", page_icon="🤝")
+st.title("🤝 AEEMG Association")
 
-st.sidebar.title("🌟 Menu")
-menu = ["Accueil / Mur", "Créer mon Profil", "Publier une Activité", "Annuaire"]
-choix = st.sidebar.radio("Navigation", menu)
+tab1, tab2, tab3 = st.tabs(["Accueil", "Mon Profil", "Annuaire"])
 
-if choix == "Accueil / Mur":
-st.button("📱 Fil d'actualité")
-st.write("Bienvenue sur l'espace de l'AEEMG !")
-st.info("Les publications des membres s'afficheront ici.")
-t.title("📱 Fil d'actualité")  
-elif choix == "Créer mon Profil":
-st.title("👤 Mon Profil")
-nom = st.text_input("Nom complet")
-bio = st.text_area("Ma présentation (bio)")
-if st.button("Enregistrer"):
-st.success(f"Bravo {nom} ! Ton profil est prêt.")
+with tab1:
+st.header("📱 Fil d'actualité")
+st.write("Bienvenue sur l'espace AEEMG !")
 
-elif choix == "Publier une Activité":
-st.title("✍️ Publier")
-titre = st.text_input("Titre de l'activité")
-contenu = st.text_area("Détails")
-if st.button("Publier sur le mur"):
-st.balloons()
-st.success("C'est publié !")
+with tab2:
+st.header("👤 Mon Profil")
+nom = st.text_input("Ton nom complet")
+st.write("Profil enregistré :", nom)
 
-elif choix == "Annuaire":
-st.title("👥 Annuaire")
-st.write("Liste des membres de l'association :")
-membres = {"Membres": ["Admin", "Président"], "Rôle": ["Gestion", "Direction"]}
-st.table(membres)
+with tab3:
+st.header("👥 Annuaire")
+st.write("Liste des membres bientôt disponible.")
