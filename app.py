@@ -13,19 +13,19 @@ st.markdown("""
 
 <style>
 .stApp {
-background: linear-gradient(rgba(18, 54, 38, 0.9), rgba(18, 54, 38, 0.9)),
+background-image: linear-gradient(rgba(0, 50, 0, 0.8), rgba(0, 50, 0, 0.8)),
 url("");
 background-size: cover;
-background-position: center;
+background-repeat: no-repeat;
 background-attachment: fixed;
 }
 [data-testid="stForm"], [data-testid="stMetric"] {
-background: rgba(255, 255, 255, 0.1) !important;
-backdrop-filter: blur(15px);
-border-radius: 20px !important;
-padding: 20px !important;
+background-color: rgba(255, 255, 255, 0.1) !important;
+backdrop-filter: blur(10px);
+border-radius: 15px;
+padding: 20px;
 }
-h1, h2, h3, label, p, span { color: white !important; }
+h1, h2, h3, label, p { color: white !important; }
 </style>
 
 """, unsafe_allow_html=True)
