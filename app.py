@@ -10,7 +10,6 @@ st.set_page_config(page_title="AEEMG Association", page_icon="🤝")
 st.sidebar.title("🌟 Menu")
 menu = ["Accueil / Mur", "Créer mon Profil", "Publier une Activité", "Annuaire"]
 choix = st.sidebar.radio("Navigation", menu)
-
 if choix == "Accueil / Mur":
 st.button("📱 Fil d'actualité")  
 st.write("Bienvenue sur l'espace de l'AEEMG !")
