@@ -16,11 +16,22 @@ if page == "Inscription":
     prenom = st.text_input("Prénom")
     email = st.text_input("Email")
 
-    if st.button("S'inscrire"):
-        data = {"nom": nom, "prenom": prenom, "email": email}
-        supabase.table("membres").insert(data).execute()
-        st.success(f"Félicitations {prenom}, tu es bien inscrit !")
-
+    # --- PAGE 2 : LISTE DES MEMBRES ---
+elif page == "Liste des membres":
+    st.title("📊 Membres inscrits")
+    
+    # Demande d'un code secret
+    code = st.text_input("Entrez le code administrateur", type="password")
+    
+    if code == "AEEMG2024":  # Tu peux changer ce code par ce que tu veux
+        res = supabase.table("membres").select("*").execute()
+        if res.data:
+            for m in res.data:
+                st.info(f"👤 {m.get('prenom')} {m.get('nom')} - {m.get('email')}")
+        else:
+            st.write("Aucun membre pour le moment.")
+    elif code != "":
+        st.error("Code incorrect ❌")
 # --- PAGE 2 : LISTE DES MEMBRES ---
 elif page == "Liste des membres":
     st.title("📊 Membres inscrits")
