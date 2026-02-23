@@ -7,17 +7,8 @@ supabase = create_client(url, key)
 
 st.title("🤝 AEEMG Association")
 
-tab1, tab2, tab3 = st.tabs(["Accueil", "Mon Profil", "Annuaire"])
+tab1, tab2 = st.tabs(["Accueil", "Profil"])
 
-with tab1:
-st.header("📱 Fil d'actualité")
-st.write("Bienvenue sur l'espace AEEMG !")
+with tab1: st.header("📱 Fil d'actualité"); st.write("Bienvenue sur l'espace AEEMG !")
 
-with tab2:
-st.header("👤 Mon Profil")
-nom = st.text_input("Ton nom complet")
-st.write("Profil enregistré :", nom)
-
-with tab3:
-st.header("👥 Annuaire")
-st.write("Liste des membres bientôt disponible.")
+with tab2: st.header("👤 Mon Profil"); nom = st.text_input("Ton nom"); st.write(nom)
