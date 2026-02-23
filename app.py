@@ -1,16 +1,19 @@
 import streamlit as st
 from supabase import create_client
 
-v_url = "https://ryfrekltrgaqyryzozhc.supabase.co"
+Connexion
+v_url = ""
 v_key = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
-
 supabase = create_client(v_url, v_key)
 
-st.set_page_config(page_title="AEEMG")
+st.set_page_config(page_title="AEEMG", page_icon="🤝")
 st.title("🤝 AEEMG Association")
 
-t1, t2 = st.tabs(["Accueil", "Profil"])
+t1, t2 = st.tabs(["Accueil", "Inscription"])
 
-with t1: st.write("✅ Bienvenue sur le fil d'actualité de l'AEEMG !")
+with t1:
+st.header("Fil d'actualité")
+st.write("Bienvenue sur l'espace officiel de l'AEEMG !")
 
-with t2: st.write("👤 Votre page de profil sera bientôt disponible.")
+with t2:
+st.header("Devenir membre")
