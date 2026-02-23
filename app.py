@@ -8,13 +8,15 @@ supabase = create_client(v_url, v_key)
 st.set_page_config(page_title="AEEMG")
 st.title("🤝 AEEMG Association")
 
-menu = st.radio("Navigation", ["Accueil", "Inscription"], horizontal=True)
+st.header("📢 Fil d'actualité")
+st.write("Bienvenue sur l'espace officiel de l'AEEMG !")
 
-if menu == "Accueil": st.write("### Bienvenue sur le fil d'actualité !")
+st.divider()
 
-if menu == "Inscription":
-st.write("### Formulaire d'inscription")
-nom = st.text_input("Ton Nom")
-prenom = st.text_input("Ton Prénom")
-email = st.text_input("Ton Email")
-if st.button("Valider"): st.success("C'est envoyé !")
+st.header("📝 Inscription")
+nom = st.text_input("Votre Nom")
+prenom = st.text_input("Votre Prénom")
+email = st.text_input("Votre Email")
+
+if st.button("Envoyer mon inscription"):
+st.success("Bravo ! Inscription enregistrée.")
