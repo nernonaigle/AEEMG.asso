@@ -30,7 +30,7 @@ if "connecte" not in st.session_state:
 with st.sidebar:
     st.image("https://img.icons8.com/fluency/100/education.png", width=100)
     st.title("AEEMG")
-    st.write("Association des Étudiants")
+    st.write("Association des Eleves et Étudiants Musulmans de Guinee")
     st.divider()
     
     if not st.session_state.connecte:
