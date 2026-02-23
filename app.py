@@ -1,15 +1,12 @@
 import streamlit as st
 from supabase import create_client
 
-Connexion Supabase
 v_url = ""
 v_key = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
 supabase = create_client(v_url, v_key)
 
-Configuration de la page
-st.set_page_config(page_title="AEEMG - Espace Membre", page_icon="🌙", layout="wide")
+st.set_page_config(page_title="AEEMG", page_icon="🌙", layout="wide")
 
-Style CSS pour le fond et les couleurs
 st.markdown("""
 <style>
 .stApp {
@@ -26,9 +23,7 @@ border-radius: 20px !important;
 border: 1px solid rgba(255, 255, 255, 0.2) !important;
 padding: 20px !important;
 }
-h1, h2, h3, label, p, span {
-color: white !important;
-}
+h1, h2, h3, label, p, span { color: white !important; }
 .stButton>button {
 background-color: #2D6A4F !important;
 color: white !important;
@@ -37,18 +32,14 @@ border: 1px solid #40916C !important;
 height: 3em;
 font-weight: bold;
 }
-[data-testid="stSidebar"] {
-background-color: rgba(8, 28, 21, 0.95) !important;
-}
+[data-testid="stSidebar"] { background-color: rgba(8, 28, 21, 0.95) !important; }
 </style>
 """, unsafe_allow_html=True)
 
-Initialisation de la session
 if "connecte" not in st.session_state:
 st.session_state.connecte = False
 st.session_state.user_info = None
 
-Barre latérale
 with st.sidebar:
 st.markdown("<h1 style='text-align: center;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
 if not st.session_state.connecte:
@@ -57,20 +48,19 @@ else:
 st.success(f"Bienvenue {st.session_state.user_info['prenom']}")
 menu = st.radio("Espace Privé", ["Tableau de Bord", "Cotisations", "Déconnexion"])
 
-Pages
 if menu == "Inscription":
 st.title("✨ Rejoindre l'AEEMG")
 with st.form("inscription"):
-nom = st.text_input("Nom")
-prenom = st.text_input("Prénom")
-email = st.text_input("Email")
+n = st.text_input("Nom")
+p = st.text_input("Prénom")
+e = st.text_input("Email")
 pwd = st.text_input("Mot de passe", type="password")
 if st.form_submit_button("Créer mon compte"):
-if nom and prenom and email and pwd:
-supabase.table("membres").insert({"nom":nom,"prenom":prenom,"email":email,"password":pwd,"cotisation":False}).execute()
+if n and p and e and pwd:
+supabase.table("membres").insert({"nom":n,"prenom":p,"email":e,"password":pwd,"cotisation":False}).execute()
 st.success("Compte créé ! Connectez-vous.")
 else:
-st.error("Veuillez remplir tous les champs.")
+st.error("Champs vides")
 
 elif menu == "Connexion":
 st.title("🔑 Connexion")
@@ -92,8 +82,6 @@ st.title(f"👋 Paix sur toi, {u['prenom']}")
 c1, c2 = st.columns(2)
 c1.metric("Statut", "Membre Actif")
 c2.metric("Cotisation", "✅ Payée" if u.get('cotisation') else "❌ À régler")
-else:
-st.warning("Veuillez vous connecter.")
 
 elif menu == "Déconnexion":
 st.session_state.connecte = False
