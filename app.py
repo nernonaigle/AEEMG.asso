@@ -21,7 +21,14 @@ email = st.text_input("Votre Email")
 if st.button("Envoyer mon inscription"):
     try:
         data = {"nom": nom, "prenom": prenom, "email": email}
-        supabase.table("membres").insert(data).execute()
-        st.success("Félicitations !")
+        # On stocke la réponse de Supabase
+        reponse = supabase.table("membres").insert(data).execute()
+        
+        # On vérifie si Supabase renvoie bien une donnée
+        if len(reponse.data) > 0:
+            st.success(f"Bravo ! {prenom} est bien enregistré dans la base.")
+        else:
+            st.error("Le site dit OK, mais la base de données est restée vide.")
+            
     except Exception as e:
-        st.error(f"Détail de l'erreur : {e}")
+        st.error(f"Erreur technique : {e}")
