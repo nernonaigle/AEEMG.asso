@@ -65,3 +65,31 @@ elif st.session_state.connecte:
             if st.button("Payer (Simulation)"):
                 supabase.table("membres").update({"cotisation":True}).eq("id", user['id']).execute()
                 st.success("Payé ! Reconnecte-toi.")
+
+elif menu == "👑 Administration":
+    st.title("👑 Gestion de l'Association")
+    
+    # Récupérer tous les membres
+    res = supabase.table("membres").select("*").execute()
+    membres = res.data
+    
+    if membres:
+        st.write(f"Nombre total de membres : **{len(membres)}**")
+        
+        # Création d'un tableau propre
+        for m in membres:
+            col1, col2, col3 = st.columns([2, 2, 1])
+            col1.write(f"{m['prenom']} {m['nom']}")
+            col2.write(m['email'])
+            
+            # Affichage du statut de paiement
+            if m.get('cotisation'):
+                col3.success("Payé")
+            else:
+                col3.error("Impayé")
+        
+        # Bouton pour exporter les emails
+        all_emails = ", ".join([m['email'] for m in membres])
+        st.text_area("Liste des emails pour envoi groupé :", value=all_emails)
+    else:
+        st.write("Aucun membre inscrit.")
