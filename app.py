@@ -1,18 +1,14 @@
 import streamlit as st
 from supabase import create_client
 
-1. Tes clés de connexion
-URL = "https://ryfrekltrgaqyryzozhc.supabase.co"
-KEY = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
+v_url = "https://ryfrekltrgaqyryzozhc.supabase.co"
+v_key = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
 
-2. Configuration de la page
-st.set_page_config(page_title="AEEMG", page_icon="🤝")
-
-3. Connexion et Affichage
 try:
-supabase = create_client(URL, KEY)
+supabase = create_client(v_url, v_key)
+st.set_page_config(page_title="AEEMG")
 st.title("🤝 AEEMG Association")
-st.success("Bravo ! Ton application est connectée.")
+st.success("Bravo ! Connexion réussie.")
 
 except Exception as e:
-st.error(f"Il y a une petite erreur : {e}")
+st.error(f"Erreur : {e}")
