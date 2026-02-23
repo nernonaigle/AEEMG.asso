@@ -1,5 +1,3 @@
-Voici le code complet en texte simple. Copie bien tout, du début à la fin, sans rien ajouter d'autre dans ton fichier app.py.
-
 import streamlit as st
 from supabase import create_client
 
