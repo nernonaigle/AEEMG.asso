@@ -13,8 +13,31 @@ st.markdown("""
     <style>
     /* Image de fond floue sur toute l'application */
     .stApp {
-        background: linear-gradient(rgba(18, 54, 38, 0.85), rgba(18, 54, 38, 0.85)), 
-                    url("https://images.unsplash.com/photo-1542621334-a254cf47733d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80");
+        background: linear-gradient(st.markdown("""
+    <style>
+    /* Image de fond : Intérieur de mosquée avec voile vert */
+    .stApp {
+        background: linear-gradient(rgba(18, 54, 38, 0.88), rgba(18, 54, 38, 0.88)), 
+                    url("https://images.unsplash.com/photo-1590076214667-cda9e7b1ff34?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
+
+    /* Boites de lecture (Glassmorphism) */
+    .stForm, .css-1r6slb0, .stMetric {
+        background: rgba(255, 255, 255, 0.08) !important;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 20px !important;
+        color: white !important;
+    }
+    
+    h1, h2, h3, label, p {
+        color: #F0FDF4 !important; /* Un blanc légèrement teinté de vert */
+    }
+    </style>
+    """, unsafe_allow_html=True));
         background-size: cover;
         background-attachment: fixed;
     }
