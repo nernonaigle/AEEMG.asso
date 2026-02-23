@@ -11,7 +11,7 @@ st.sidebar.title("🌟 Menu")
 menu = ["Accueil / Mur", "Créer mon Profil", "Publier une Activité", "Annuaire"]
 choix = st.sidebar.radio("Navigation", menu)
 
-if choix == "Accueil / Mur":
+if choix == "Accueil / Mur":  
 st.title("📱 Fil d'actualité")
 st.write("Bienvenue sur l'espace de l'AEEMG !")
 st.info("Les publications des membres s'afficheront ici.")
