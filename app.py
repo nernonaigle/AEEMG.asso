@@ -97,6 +97,21 @@ elif st.session_state.connecte:
         st.write("- Statuts de l'AEEMG")
         st.write("- Guide de l'étudiant")
 
-    elif menu == "💳 Cotisations":
+    √elif menu == "💳 Cotisations":
         st.title("💳 Ma Cotisation")
-        st.write("Le paiement en ligne sera bientôt disponible.")
+        
+        # On vérifie le statut dans la base de données
+        statut_paiement = user.get('cotisation', False)
+        
+        if statut_paiement:
+            st.success("✅ Vous êtes à jour dans vos cotisations. Merci !")
+        else:
+            st.warning("⚠️ Votre cotisation pour l'année en cours n'est pas encore réglée.")
+            st.write("Le montant de la cotisation annuelle est de **10 €** (exemple).")
+            
+            # Optionnel : Ajouter un bouton de simulation de paiement
+            if st.button("Simuler un paiement (Test)"):
+                # Ici on met à jour la base de données
+                supabase.table("membres").update({"cotisation": True}).eq("id", user['id']).execute()
+                st.balloons()
+                st.success("Paiement enregistré ! Veuillez rafraîchir la page.")
