@@ -1,117 +1,61 @@
 import streamlit as st
 from supabase import create_client
 
-# 1. Connexion Supabase
+# 1. Connexion
 v_url = "https://ryfrekltrgaqyryzozhc.supabase.co"
 v_key = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
 supabase = create_client(v_url, v_key)
 
-# --- CONFIGURATION DU DESIGN ---
-st.set_page_config(page_title="AEEMG - Espace Membre", page_icon="🎓", layout="centered")
+# --- DESIGN ---
+st.set_page_config(page_title="AEEMG", page_icon="🎓")
+st.markdown("<style>.stButton>button {width:100%; border-radius:20px; background:#1E3A8A; color:white;}</style>", unsafe_allow_html=True)
 
-# Petit CSS pour personnaliser les couleurs (Exemple : Bleu et Or)
-# --- CONFIGURATION DU DESIGN ---
-st.set_page_config(page_title="AEEMG - Espace Membre", page_icon="🎓", layout="centered")
-
-# CSS corrigé pour personnaliser les couleurs
-st.markdown("""
-    <style>
-    .main { background-color: #f5f7f9; }
-    .stButton>button { width: 100%; border-radius: 20px; background-color: #1E3A8A; color: white; }
-    .stTextInput>div>div>input { border-radius: 10px; }
-    </style>
-    """, unsafe_allow_html=True) # <-- C'était ici l'erreur, c'est 'html' et non 'status'
-# 2. Gestion de la connexion
 if "connecte" not in st.session_state:
-    st.session_state.connecte = False
-    st.session_state.user_info = None
+    st.session_state.connecte, st.session_state.user_info = False, None
 
-# --- BARRE LATÉRALE ---
-st.sidebar.image("https://img.icons8.com/fluency/96/education.png", width=80) # Un petit logo par défaut
+# --- MENU ---
 st.sidebar.title("AEEMG")
-
 if not st.session_state.connecte:
     menu = st.sidebar.radio("Menu", ["Connexion", "S'inscrire"])
 else:
-    st.sidebar.success(f"Connecté : {st.session_state.user_info['prenom']}")
-    menu = st.sidebar.radio("Menu", ["🏠 Tableau de Bord", "📂 Mes Documents", "💳 Cotisations", "🚪 Déconnexion"])
+    menu = st.sidebar.radio("Menu", ["🏠 Tableau de Bord", "💳 Cotisations", "🚪 Déconnexion"])
 
-# --- LOGIQUE DE DÉCONNEXION ---
+# --- LOGIQUE ---
 if menu == "🚪 Déconnexion":
     st.session_state.connecte = False
-    st.session_state.user_info = None
     st.rerun()
 
-# --- PAGE D'INSCRIPTION ---
 if menu == "S'inscrire":
-    st.title("📝 Rejoindre l'AEEMG")
-    with st.container():
-        nom = st.text_input("Nom")
-        prenom = st.text_input("Prénom")
-        email = st.text_input("Email")
-        pwd = st.text_input("Mot de passe", type="password")
-        if st.button("Valider l'inscription"):
-            if nom and prenom and email and pwd:
-                data = {"nom": nom, "prenom": prenom, "email": email, "password": pwd}
-                supabase.table("membres").insert(data).execute()
-                st.success("Compte créé avec succès !")
-            else:
-                st.error("Champs manquants")
+    st.title("📝 Inscription")
+    with st.form("ins"):
+        n, p, e, pwd = st.text_input("Nom"), st.text_input("Prénom"), st.text_input("Email"), st.text_input("Pass", type="password")
+        if st.form_submit_button("Valider"):
+            supabase.table("membres").insert({"nom":n,"prenom":p,"email":e,"password":pwd,"cotisation":False}).execute()
+            st.success("Compte créé !")
 
-# --- PAGE DE CONNEXION ---
 elif menu == "Connexion":
-    st.title("🔑 Espace Membre")
-    col1, col2 = st.columns([1, 2]) # Pour centrer un peu
-    with col2:
-        email_login = st.text_input("Email")
-        pwd_login = st.text_input("Mot de passe", type="password")
-        if st.button("Se connecter"):
-            res = supabase.table("membres").select("*").eq("email", email_login).eq("password", pwd_login).execute()
-            if len(res.data) > 0:
-                st.session_state.connecte = True
-                st.session_state.user_info = res.data[0]
-                st.rerun()
-            else:
-                st.error("Identifiants incorrects")
+    st.title("🔑 Connexion")
+    e_l, p_l = st.text_input("Email"), st.text_input("Pass", type="password")
+    if st.button("Se connecter"):
+        res = supabase.table("membres").select("*").eq("email", e_l).eq("password", p_l).execute()
+        if res.data:
+            st.session_state.connecte, st.session_state.user_info = True, res.data[0]
+            st.rerun()
+        else: st.error("Erreur d'identifiants")
 
-# --- ESPACE MEMBRE PRIVÉ ---
 elif st.session_state.connecte:
     user = st.session_state.user_info
-    
     if menu == "🏠 Tableau de Bord":
-        st.title(f"👋 Bienvenue, {user['prenom']} !")
-        
-        # Affichage avec des colonnes pour faire "Dashboard"
-        c1, c2 = st.columns(2)
-        with c1:
-            st.info(f"**Statut :** Membre Actif")
-        with c2:
-            st.info(f"**Cotisation :** ❌ Non payée") # On gérera ça après
-            
-        st.write("---")
-        st.subheader("Dernières annonces")
-        st.write("📢 Prochaine réunion de l'association prévue samedi prochain.")
-
-    elif menu == "📂 Mes Documents":
-        st.title("📁 Documents utiles")
-        st.write("- Statuts de l'AEEMG")
-        st.write("- Guide de l'étudiant")
-
-    √elif menu == "💳 Cotisations":
-        st.title("💳 Ma Cotisation")
-        
-        # On vérifie le statut dans la base de données
-        statut_paiement = user.get('cotisation', False)
-        
-        if statut_paiement:
-            st.success("✅ Vous êtes à jour dans vos cotisations. Merci !")
+        st.title(f"Salut {user['prenom']} !")
+        st.info("Bienvenue sur ton espace membre AEEMG.")
+    elif menu == "💳 Cotisations":
+        st.title("💳 Cotisation")
+        # On recharge la donnée en direct
+        check = supabase.table("membres").select("cotisation").eq("id", user['id']).execute()
+        paye = check.data[0]['cotisation'] if check.data else False
+        if paye: st.success("✅ Cotisation à jour")
         else:
-            st.warning("⚠️ Votre cotisation pour l'année en cours n'est pas encore réglée.")
-            st.write("Le montant de la cotisation annuelle est de **10 €** (exemple).")
-            
-            # Optionnel : Ajouter un bouton de simulation de paiement
-            if st.button("Simuler un paiement (Test)"):
-                # Ici on met à jour la base de données
-                supabase.table("membres").update({"cotisation": True}).eq("id", user['id']).execute()
-                st.balloons()
-                st.success("Paiement enregistré ! Veuillez rafraîchir la page.")
+            st.warning("⚠️ Non payée")
+            if st.button("Payer (Simulation)"):
+                supabase.table("membres").update({"cotisation":True}).eq("id", user['id']).execute()
+                st.success("Payé ! Reconnecte-toi.")
