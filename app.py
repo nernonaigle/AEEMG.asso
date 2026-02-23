@@ -37,28 +37,28 @@ font-weight: bold;
 """, unsafe_allow_html=True)
 
 if "connecte" not in st.session_state:
-st.session_state.connecte = False
-st.session_state.user_info = None
+    st.session_state.connecte = False
+    st.session_state.user_info = None
 
 with st.sidebar:
 st.markdown("<h1 style='text-align: center;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
 if not st.session_state.connecte:
-menu = st.radio("Navigation", ["Connexion", "Inscription"])
+    menu = st.radio("Navigation", ["Connexion", "Inscription"])
 else:
 st.success(f"Bienvenue {st.session_state.user_info['prenom']}")
 menu = st.radio("Espace Privé", ["Tableau de Bord", "Cotisations", "Déconnexion"])
 
 if menu == "Inscription":
-st.title("✨ Rejoindre l'AEEMG")
-with st.form("inscription"):
-n = st.text_input("Nom")
-p = st.text_input("Prénom")
-e = st.text_input("Email")
-pwd = st.text_input("Mot de passe", type="password")
+    st.title("✨ Rejoindre l'AEEMG")
+    with st.form("inscription"):
+    n = st.text_input("Nom")
+    p = st.text_input("Prénom")
+    e = st.text_input("Email")
+    pwd = st.text_input("Mot de passe", type="password")
 if st.form_submit_button("Créer mon compte"):
 if n and p and e and pwd:
-supabase.table("membres").insert({"nom":n,"prenom":p,"email":e,"password":pwd,"cotisation":False}).execute()
-st.success("Compte créé ! Connectez-vous.")
+    supabase.table("membres").insert({"nom":n,"prenom":p,"email":e,"password":pwd,"cotisation":False}).execute()
+    st.success("Compte créé ! Connectez-vous.")
 else:
 st.error("Champs vides")
 
@@ -67,21 +67,21 @@ st.title("🔑 Connexion")
 e_l = st.text_input("Email")
 p_l = st.text_input("Mot de passe", type="password")
 if st.button("Se connecter"):
-res = supabase.table("membres").select("*").eq("email", e_l).eq("password", p_l).execute()
+    res = supabase.table("membres").select("*").eq("email", e_l).eq("password", p_l).execute()
 if res.data:
-st.session_state.connecte = True
-st.session_state.user_info = res.data[0]
-st.rerun()
+    st.session_state.connecte = True
+    st.session_state.user_info = res.data[0]
+    st.rerun()
 else:
 st.error("Identifiants incorrects")
 
 elif menu == "Tableau de Bord":
 if st.session_state.connecte:
-u = st.session_state.user_info
-st.title(f"👋 Paix sur toi, {u['prenom']}")
-c1, c2 = st.columns(2)
-c1.metric("Statut", "Membre Actif")
-c2.metric("Cotisation", "✅ Payée" if u.get('cotisation') else "❌ À régler")
+    u = st.session_state.user_info
+    st.title(f"👋 Paix sur toi, {u['prenom']}")
+    c1, c2 = st.columns(2)
+    c1.metric("Statut", "Membre Actif")
+    c2.metric("Cotisation", "✅ Payée" if u.get('cotisation') else "❌ À régler")
 
 elif menu == "Déconnexion":
 st.session_state.connecte = False
