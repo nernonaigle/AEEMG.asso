@@ -1,43 +1,77 @@
 import streamlit as st
 from supabase import create_client
 
-# Connexion à ta base
+# 1. Connexion Supabase
 v_url = "https://ryfrekltrgaqyryzozhc.supabase.co"
 v_key = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
 supabase = create_client(v_url, v_key)
 
-st.set_page_config(page_title="AEEMG", page_icon="🤝")
+# 2. Gestion de la connexion (Session State)
+if "connecte" not in st.session_state:
+    st.session_state.connecte = False
+    st.session_state.user_info = None
 
-# Titre centré
-st.title("🤝 Inscription AEEMG")
-st.write("Veuillez remplir vos informations pour rejoindre l'association.")
+# --- BARRE LATÉRALE ---
+st.sidebar.title("Menu AEEMG")
+if not st.session_state.connecte:
+    menu = st.sidebar.radio("Navigation", ["Connexion", "S'inscrire"])
+else:
+    menu = st.sidebar.radio("Navigation", ["Mon Profil", "Documents", "Déconnexion"])
 
-# Formulaire ordonné
-with st.form("formulaire_inscription"):
-    nom = st.text_input("Votre Nom")
-    prenom = st.text_input("Votre Prénom")
-    email = st.text_input("Votre adresse Email")
-    password = st.text_input("Choisissez un Mot de Passe", type="password")
-    
-    # Bouton de validation
-    submit = st.form_submit_button("Créer mon compte")
+# --- LOGIQUE DE DÉCONNEXION ---
+if menu == "Déconnexion":
+    st.session_state.connecte = False
+    st.session_state.user_info = None
+    st.rerun()
 
-# Action après clic
-if submit:
-    if nom and prenom and email and password:
-        # On prépare les données (vérifie que tes colonnes sur Supabase ont ces noms précis)
-        data = {
-            "nom": nom, 
-            "prenom": prenom, 
-            "email": email, 
-            "password": password
-        }
+# --- PAGE D'INSCRIPTION ---
+if menu == "S'inscrire":
+    st.title("📝 Créer un compte")
+    with st.form("inscription"):
+        nom = st.text_input("Nom")
+        prenom = st.text_input("Prénom")
+        email = st.text_input("Email")
+        pwd = st.text_input("Mot de passe", type="password")
+        submit = st.form_submit_button("S'inscrire")
         
-        try:
-            supabase.table("membres").insert(data).execute()
-            st.success(f"Félicitations {prenom} ! Tu es bien inscrit(e).")
-            st.balloons() # Petite animation de fête
-        except Exception as e:
-            st.error("Erreur lors de l'inscription. Vérifie que la colonne 'password' existe sur Supabase.")
-    else:
-        st.warning("⚠️ Attention : Tous les champs doivent être remplis.")
+        if submit:
+            if nom and prenom and email and pwd:
+                data = {"nom": nom, "prenom": prenom, "email": email, "password": pwd}
+                supabase.table("membres").insert(data).execute()
+                st.success("Compte créé ! Tu peux maintenant te connecter.")
+            else:
+                st.error("Remplis tous les champs !")
+
+# --- PAGE DE CONNEXION ---
+elif menu == "Connexion":
+    st.title("🔑 Connexion")
+    email_login = st.text_input("Email")
+    pwd_login = st.text_input("Mot de passe", type="password")
+    
+    if st.button("Se connecter"):
+        # On cherche l'utilisateur avec cet email et ce mot de passe
+        res = supabase.table("membres").select("*").eq("email", email_login).eq("password", pwd_login).execute()
+        
+        if len(res.data) > 0:
+            st.session_state.connecte = True
+            st.session_state.user_info = res.data[0]
+            st.success(f"Bienvenue {res.data[0]['prenom']} !")
+            st.rerun()
+        else:
+            st.error("Email ou mot de passe incorrect.")
+
+# --- ESPACE MEMBRE PRIVÉ ---
+elif st.session_state.connecte:
+    user = st.session_state.user_info
+    st.title(f"👋 Espace de {user['prenom']}")
+    
+    if menu == "Mon Profil":
+        st.subheader("Tes informations")
+        st.write(f"**Nom :** {user['nom']}")
+        st.write(f"**Prénom :** {user['prenom']}")
+        st.write(f"**Email :** {user['email']}")
+        
+    elif menu == "Documents":
+        st.subheader("📂 Documents de l'association")
+        st.write("Ici, tu trouveras les PV d'assemblée générale et les statuts.")
+        # On pourra ajouter des liens de téléchargement plus tard
