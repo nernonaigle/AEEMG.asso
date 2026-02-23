@@ -12,10 +12,10 @@ menu = ["Accueil / Mur", "Créer mon Profil", "Publier une Activité", "Annuaire
 choix = st.sidebar.radio("Navigation", menu)
 
 if choix == "Accueil / Mur":
-st.title("📱 Fil d'actualité")  
+st.button("📱 Fil d'actualité")  
 st.write("Bienvenue sur l'espace de l'AEEMG !")
 st.info("Les publications des membres s'afficheront ici.")
-
+t.title("📱 Fil d'actualité")  
 elif choix == "Créer mon Profil":
 st.title("👤 Mon Profil")
 nom = st.text_input("Nom complet")
