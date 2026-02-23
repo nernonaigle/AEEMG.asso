@@ -13,19 +13,20 @@ st.markdown("""
 
 <style>
 .stApp {
-background-image: linear-gradient(rgba(0, 50, 0, 0.8), rgba(0, 50, 0, 0.8)),
+background-image: linear-gradient(rgba(18, 54, 38, 0.8), rgba(18, 54, 38, 0.8)),
 url("");
 background-size: cover;
+background-position: center;
 background-repeat: no-repeat;
 background-attachment: fixed;
 }
-[data-testid="stForm"], [data-testid="stMetric"] {
-background-color: rgba(255, 255, 255, 0.1) !important;
-backdrop-filter: blur(10px);
-border-radius: 15px;
-padding: 20px;
+[data-testid="stHeader"] {
+background: rgba(0,0,0,0);
 }
-h1, h2, h3, label, p { color: white !important; }
+h1, h2, h3, label, p {
+color: white !important;
+text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
 </style>
 
 """, unsafe_allow_html=True)
