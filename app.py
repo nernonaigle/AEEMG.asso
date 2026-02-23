@@ -10,14 +10,17 @@ supabase = create_client(v_url, v_key)
 st.set_page_config(page_title="AEEMG - Espace Membre", page_icon="🎓", layout="centered")
 
 # Petit CSS pour personnaliser les couleurs (Exemple : Bleu et Or)
+# --- CONFIGURATION DU DESIGN ---
+st.set_page_config(page_title="AEEMG - Espace Membre", page_icon="🎓", layout="centered")
+
+# CSS corrigé pour personnaliser les couleurs
 st.markdown("""
     <style>
     .main { background-color: #f5f7f9; }
     .stButton>button { width: 100%; border-radius: 20px; background-color: #1E3A8A; color: white; }
     .stTextInput>div>div>input { border-radius: 10px; }
     </style>
-    """, unsafe_allow_status=True)
-
+    """, unsafe_allow_html=True) # <-- C'était ici l'erreur, c'est 'html' et non 'status'
 # 2. Gestion de la connexion
 if "connecte" not in st.session_state:
     st.session_state.connecte = False
