@@ -1,49 +1,43 @@
 import streamlit as st
 from supabase import create_client
 
-# 1. Connexion à ta base
+# Connexion à ta base
 v_url = "https://ryfrekltrgaqyryzozhc.supabase.co"
 v_key = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
 supabase = create_client(v_url, v_key)
 
-# 2. Configuration de la page et Menu
-st.set_page_config(page_title="AEEMG Asso", page_icon="🤝")
-page = st.sidebar.radio("Navigation", ["Inscription", "Liste des membres"])
+st.set_page_config(page_title="AEEMG", page_icon="🤝")
 
-# --- PAGE 1 : INSCRIPTION ---
-if page == "Inscription":
-    st.title("📝 Inscription AEEMG")
-    st.write("Bienvenue ! Veuillez remplir le formulaire ci-dessous.")
+# Titre centré
+st.title("🤝 Inscription AEEMG")
+st.write("Veuillez remplir vos informations pour rejoindre l'association.")
+
+# Formulaire ordonné
+with st.form("formulaire_inscription"):
+    nom = st.text_input("Votre Nom")
+    prenom = st.text_input("Votre Prénom")
+    email = st.text_input("Votre adresse Email")
+    password = st.text_input("Choisissez un Mot de Passe", type="password")
     
-    with st.form("form_inscription"):
-        nom = st.text_input("Nom")
-        prenom = st.text_input("Prénom")
-        email = st.text_input("Email")
+    # Bouton de validation
+    submit = st.form_submit_button("Créer mon compte")
+
+# Action après clic
+if submit:
+    if nom and prenom and email and password:
+        # On prépare les données (vérifie que tes colonnes sur Supabase ont ces noms précis)
+        data = {
+            "nom": nom, 
+            "prenom": prenom, 
+            "email": email, 
+            "password": password
+        }
         
-        # Le bouton est à l'intérieur du formulaire maintenant
-        bouton_valider = st.form_submit_button("S'inscrire")
-
-    if bouton_valider:
-        if nom and prenom and email:
-            data = {"nom": nom, "prenom": prenom, "email": email}
+        try:
             supabase.table("membres").insert(data).execute()
-            st.success(f"Félicitations {prenom}, l'inscription est réussie ! ✅")
-        else:
-            st.warning("Veuillez remplir tous les champs.")
-
-# --- PAGE 2 : LISTE DES MEMBRES ---
-elif page == "Liste des membres":
-    st.title("📊 Administration")
-    
-    code = st.text_input("Entrez le code secret pour voir les membres", type="password")
-    
-    if code == "AEEMG2026": # Ton code secret
-        res = supabase.table("membres").select("*").execute()
-        if res.data:
-            st.write(f"Il y a {len(res.data)} membres inscrits :")
-            for m in res.data:
-                st.info(f"👤 {m.get('prenom')} {m.get('nom')} ({m.get('email')})")
-        else:
-            st.write("La liste est vide.")
-    elif code != "":
-        st.error("Code secret incorrect ❌")
+            st.success(f"Félicitations {prenom} ! Tu es bien inscrit(e).")
+            st.balloons() # Petite animation de fête
+        except Exception as e:
+            st.error("Erreur lors de l'inscription. Vérifie que la colonne 'password' existe sur Supabase.")
+    else:
+        st.warning("⚠️ Attention : Tous les champs doivent être remplis.")
