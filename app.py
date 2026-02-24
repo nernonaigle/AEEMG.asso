@@ -110,6 +110,10 @@ elif menu == "🏠 Tableau de Bord":
         st.info("💡 Annonce : La réunion mensuelle aura lieu dimanche à 10h.")
     else:
         st.warning("Veuillez vous connecter.")
+elif menu == "💳 Cotisations":
+    if st.session_state.connecte:
+        st.markdown("<h1>💳 Ma Cotisation</h1>", unsafe_allow_html=True)
+        u = st.session_state.user_info
 elif menu == "🚪 Déconnexion":
     st.session_state.connecte = False
     st.rerun()
