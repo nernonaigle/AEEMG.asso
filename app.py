@@ -71,7 +71,7 @@ elif menu == "🔑 Connexion":
                 st.error("Identifiants incorrects")
 
 elif menu == "Tableau de Bord":
-if st.session_state.connecte:
+        if st.session_state.connecte:
     u = st.session_state.user_info
     st.markdown(f"""
     <div style="text-align: center; padding: 20px;">
