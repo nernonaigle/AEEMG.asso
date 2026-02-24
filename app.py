@@ -32,8 +32,16 @@ with st.sidebar:
         menu = st.radio("Navigation", ["🔑 Connexion", "📝 Inscription"])
     else:
         st.success(f"Bienvenue {st.session_state.user_info['prenom']}")
-        menu = st.radio("Espace Privé", ["🏠 Tableau de Bord", "💳 Cotisations", "📂 Documents", "🚪 Déconnexion"])
-
+        
+        # On définit les options de base
+        options = ["🏠 Tableau de Bord", "💳 Cotisations", "📂 Documents", "🚪 Déconnexion"]
+        
+        # --- PARTIE À PERSONNALISER ---
+        # Remplace l'email ci-dessous par ton email exact
+        if st.session_state.user_info['email'] == "nernonedouard99@gmail.com":
+            options.insert(3, "🛠️ Admin") # Ceci ajoute 'Admin' avant 'Déconnexion'
+        
+        menu = st.radio("Espace Privé", options)
 # --- CONTENU DES PAGES ---
 
 if menu == "📝 Inscription":
