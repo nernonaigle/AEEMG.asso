@@ -70,23 +70,33 @@ elif menu == "🔑 Connexion":
             else:
                 st.error("Identifiants incorrects")
 
-elif menu == "Tableau de Bord":
+elif menu == "🏠 Tableau de Bord":
     if st.session_state.connecte:
         u = st.session_state.user_info
         st.markdown(f"""
             <div style='text-align: center; padding: 20px;'>
                 <img src='' style='border-radius: 50%; width: 120px; height: 120px; border: 3px solid #2D6A4F; background-color: white;'>
                 <h1 style='margin-top: 10px;'>{u['prenom']} {u['nom']}</h1>
-                <p style='color: #ccc; font-style: italic;'>Membre de la communauté AEEMG</p>
+                <p style='color: #ccc; font-style: italic;'>{u.get('bio', 'Membre de la communauté AEEMG')}</p>
             </div>
         """, unsafe_allow_html=True)
-        st.write("---")
+        
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("### 📋 Mes Infos")
             st.write(f"📧 Email : {u['email']}")
             st.write(f"📞 Tel : {u.get('telephone', 'Non renseigné')}")
             st.write(f"📍 Ville : {u.get('ville', 'Non renseignée')}")
+            
+            with st.expander("⚙️ Modifier mes infos"):
+                with st.form("update_profil"):
+                    new_tel = st.text_input("Téléphone", value=u.get('telephone', ''))
+                    new_ville = st.text_input("Ville", value=u.get('ville', ''))
+                    new_bio = st.text_area("Bio", value=u.get('bio', ''))
+                    if st.form_submit_button("Enregistrer"):
+                        supabase.table("membres").update({"telephone": new_tel, "ville": new_ville, "bio": new_bio}).eq("email", u['email']).execute()
+                        st.success("Enregistré ! Reconnectez-vous pour voir les changements.")
+        
         with col2:
             st.markdown("### 💎 Mon Statut")
             if u.get('cotisation'):
@@ -94,18 +104,12 @@ elif menu == "Tableau de Bord":
             else:
                 st.warning("Cotisation à régler ❌")
                 st.button("Payer ma cotisation")
+        
         st.write("---")
         st.markdown("### 📢 Fil d'actualité")
         st.info("💡 Annonce : La réunion mensuelle aura lieu dimanche à 10h.")
     else:
         st.warning("Veuillez vous connecter.")
-    
-    # Statistiques en cartes transparentes
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Statut", "Membre Actif")
-    c2.metric("Année", "2026")
-    c3.metric("Cotisation", "✅ Payée" if u.get('cotisation') else "❌ À régler")
-
 elif menu == "🚪 Déconnexion":
     st.session_state.connecte = False
     st.rerun()
