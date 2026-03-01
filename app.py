@@ -3,6 +3,9 @@ from supabase import create_client
 import hashlib
 from datetime import datetime
 import time
+import base64
+from io import BytesIO
+from PIL import Image
 
 # 1. Configuration de la page
 st.set_page_config(page_title="AEEMG - Espace Membre", page_icon="🌙", layout="wide")
@@ -66,7 +69,7 @@ with st.sidebar:
     else:
         # Photo dans la sidebar
         img_url = st.session_state.user_info.get('photo_url') or "https://www.w3schools.com/howto/img_avatar.png"
-        st.markdown(f"<div style='text-align:center;'><img src='{img_url}' style='width:70px;height:70px;border-radius:50%;border:2px solid #D4AF37;'></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:center;'><img src='{img_url}' style='width:70px;height:70px;border-radius:50%;border:2px solid #D4AF37; object-fit: cover;'></div>", unsafe_allow_html=True)
         st.markdown(f"<p style='text-align:center; color:white;'><b>{st.session_state.user_info.get('prenom')}</b></p>", unsafe_allow_html=True)
         
         options = ["🏠 Tableau de Bord", "💳 Cotisations", "📂 Documents", "📸 Galerie", "🚪 Déconnexion"]
@@ -117,19 +120,29 @@ elif menu == "🏠 Tableau de Bord":
     
     with col_p:
         st.markdown('<div class="glass-card" style="text-align:center;">', unsafe_allow_html=True)
+        # Affichage photo
         img_url = u.get('photo_url') or "https://www.w3schools.com/howto/img_avatar.png"
         st.markdown(f"<img src='{img_url}' class='profile-img'>", unsafe_allow_html=True)
         st.write(f"**{u['prenom']} {u['nom']}**")
         
-        # Modifier la photo
-        with st.expander("Modifier ma photo"):
-            new_url = st.text_input("Lien URL de l'image (JPG/PNG)", value=img_url)
-            if st.button("Enregistrer la photo"):
-                supabase.table("membres").update({"photo_url": new_url}).eq("id", u['id']).execute()
-                st.session_state.user_info['photo_url'] = new_url
-                st.success("Photo mise à jour !")
-                time.sleep(1)
-                st.rerun()
+        # --- NOUVEAU SYSTÈME D'IMPORTATION ---
+        with st.expander("📸 Changer ma photo"):
+            uploaded_file = st.file_uploader("Importer depuis la galerie", type=['jpg', 'jpeg', 'png'])
+            if uploaded_file is not None:
+                # Optimisation de l'image
+                img = Image.open(uploaded_file)
+                img.thumbnail((300, 300))
+                buffered = BytesIO()
+                img.save(buffered, format="PNG")
+                img_str = base64.b64encode(buffered.getvalue()).decode()
+                full_base64 = f"data:image/png;base64,{img_str}"
+                
+                if st.button("Confirmer l'importation"):
+                    supabase.table("membres").update({"photo_url": full_base64}).eq("id", u['id']).execute()
+                    st.session_state.user_info['photo_url'] = full_base64
+                    st.success("Photo mise à jour !")
+                    time.sleep(1)
+                    st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_i:
@@ -137,26 +150,25 @@ elif menu == "🏠 Tableau de Bord":
         st.markdown(f"""<div class="glass-card" style="padding: 15px; border-left: 5px solid #D4AF37;">
             <small style="color: #888;">Mars 2026</small>
             <h4 style="margin: 5px 0;">🌙 Bienvenue sur votre portail</h4>
-            <p style="font-size: 0.9em;">N'oubliez pas de mettre à jour votre profil !</p>
+            <p style="font-size: 0.9em;">Personnalisez votre espace en important votre photo de profil.</p>
         </div>""", unsafe_allow_html=True)
 
     # Stats en bas
     c1, c2, c3 = st.columns(3)
-    c1.markdown(f'<div class="glass-card">Statut: ✨ Actif<br>ID: #00{u["id"]}</div>', unsafe_allow_html=True)
-    c2.markdown(f'<div class="glass-card">Cotisation: {"✅ À jour" if u["cotisation"] else "⚠️ À régler"}</div>', unsafe_allow_html=True)
-    c3.markdown(f'<div class="glass-card">Organe:<br>{u["organe_base"]}</div>', unsafe_allow_html=True)
+    c1.markdown(f'<div class="glass-card" style="text-align:center;">Statut<br><b>✨ Actif</b></div>', unsafe_allow_html=True)
+    c2.markdown(f'<div class="glass-card" style="text-align:center;">Cotisation<br><b>{"✅ À jour" if u["cotisation"] else "⚠️ À régler"}</b></div>', unsafe_allow_html=True)
+    c3.markdown(f'<div class="glass-card" style="text-align:center;">Organe<br><b>{u["organe_base"]}</b></div>', unsafe_allow_html=True)
 
-# (Reste du code : Cotisations, Documents, Galerie, Admin, Déconnexion inchangés)
 elif menu == "💳 Cotisations":
-    st.markdown("<h1 class='gold-text'>💳 Ma Cotisation</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='gold-text'>💳 Ma Cotisation</h1>")
     st.markdown('<div class="glass-card">Le montant est de 10.000 GNF.</div>', unsafe_allow_html=True)
 elif menu == "📂 Documents":
-    st.markdown("<h1 class='gold-text'>📂 Bibliothèque</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='gold-text'>📂 Bibliothèque</h1>")
 elif menu == "📸 Galerie":
-    st.markdown("<h1 class='gold-text'>📸 Galerie Photos</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='gold-text'>📸 Galerie Photos</h1>")
 elif menu == "🛠️ Admin":
     if st.session_state.user_info.get('email') == "nernonedouard99@gmail.com":
-        st.markdown("<h1 class='gold-text'>🛠️ Admin</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 class='gold-text'>🛠️ Admin</h1>")
         res = supabase.table("membres").select("*").eq("statut", "en_attente").execute()
         for m in res.data:
             with st.expander(f"{m['prenom']} {m['nom']}"):
