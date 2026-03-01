@@ -1,202 +1,3 @@
-import streamlit as st
-from supabase import create_client
-import hashlib
-from datetime import datetime
-
-# 1. Connexion Supabase
-v_url = "https://ryfrekltrgaqyryzozhc.supabase.co"
-v_key = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
-supabase = create_client(v_url, v_key)
-
-# --- FONCTIONS DE SÉCURITÉ ---
-def hasher_password(password):
-    return hashlib.sha256(str.encode(password)).hexdigest()
-
-# --- 🎨 DESIGN INSTITUTIONNEL (Vert Émeraude & Or) ---
-st.set_page_config(page_title="AEEMG - Espace Membre", page_icon="🌙", layout="wide")
-
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
-    html, body, [class*="st-"] { font-family: 'Poppins', sans-serif; }
-
-    .stApp {
-        background: linear-gradient(rgba(2, 44, 34, 0.9), rgba(2, 44, 34, 0.95)),
-        url("https://images.unsplash.com/photo-1518005020250-6eb5f3f2754d?q=80&w=2000") no-repeat center center fixed;
-        background-size: cover !important;
-    }
-
-    .glass-card {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(15px);
-        border-radius: 20px;
-        padding: 25px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: white;
-        margin-bottom: 20px;
-    }
-
-    .stButton>button {
-        border-radius: 12px !important;
-        background-color: #065f46 !important;
-        color: white !important;
-        border: 1px solid #D4AF37 !important;
-        transition: all 0.3s ease;
-        height: 45px;
-        width: 100%;
-    }
-    
-    .stButton>button:hover {
-        background-color: #047857 !important;
-        transform: scale(1.02);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
-    
-    /* Correction pour les expanders */
-    .stExpander {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border-radius: 10px !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# 2. Gestion de Session
-if "connecte" not in st.session_state:
-    st.session_state.connecte, st.session_state.user_info = False, None
-if "step_inscription" not in st.session_state:
-    st.session_state.step_inscription = 1
-if "temp_user" not in st.session_state:
-    st.session_state.temp_user = {}
-
-# --- NAVIGATION ---
-with st.sidebar:
-    st.markdown("<h1 style='text-align: center; color: #D4AF37;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
-    st.write("---")
-    if not st.session_state.connecte:
-        menu = st.radio("Navigation", ["🔑 Connexion", "📝 Inscription"])
-    else:
-        st.markdown(f"🟢 **{st.session_state.user_info.get('prenom')}**")
-        options = ["🏠 Tableau de Bord", "💳 Cotisations", "📂 Documents", "📸 Galerie", "🚪 Déconnexion"]
-        if st.session_state.user_info.get('email') == "nernonedouard99@gmail.com":
-            options.insert(4, "🛠️ Admin") 
-        menu = st.radio("Menu Principal", options)
-
-# --- CONTENU DES PAGES ---
-
-if menu == "📝 Inscription":
-    st.markdown("<h1 style='color: white;'>✨ Parcours d'Adhésion</h1>", unsafe_allow_html=True)
-    
-    steps = ["Identifiants", "État Civil", "Engagement"]
-    st.progress(st.session_state.step_inscription / 3)
-    st.info(f"Étape {st.session_state.step_inscription} sur 3 : {steps[st.session_state.step_inscription-1]}")
-
-    if st.session_state.step_inscription == 1:
-        with st.form("step1"):
-            st.markdown("### 🔑 Créez vos accès")
-            email = st.text_input("Adresse Email")
-            pwd = st.text_input("Mot de passe", type="password")
-            confirm = st.text_input("Confirmez le mot de passe", type="password")
-            if st.form_submit_button("Continuer →"):
-                if pwd == confirm and "@" in email:
-                    st.session_state.temp_user['email'] = email
-                    st.session_state.temp_user['password'] = hasher_password(pwd)
-                    st.session_state.step_inscription = 2
-                    st.rerun()
-                else: st.error("Veuillez vérifier vos informations (Mots de passe identiques et email valide).")
-
-    elif st.session_state.step_inscription == 2:
-        with st.form("step2"):
-            st.markdown("### 📋 Informations Personnelles")
-            c1, c2 = st.columns(2)
-            nom = c1.text_input("Nom de famille")
-            prenom = c2.text_input("Prénom")
-            dnaiss = c1.date_input("Date de naissance", min_value=datetime(1960,1,1))
-            lnaiss = c2.text_input("Lieu de naissance")
-            pere = c1.text_input("Nom du Père")
-            mere = c2.text_input("Nom de la Mère")
-            domicile = c1.text_input("Domicile")
-            ville = c2.text_input("Ville")
-            organe = st.selectbox("Organe de base", ["Bureau National", "Section Universitaire", "Antenne Régionale"])
-            
-            if st.form_submit_button("Continuer →"):
-                st.session_state.temp_user.update({
-                    "nom": nom, "prenom": prenom, "date_naissance": str(dnaiss),
-                    "lieu_naissance": lnaiss, "nom_pere": pere, "nom_mere": mere,
-                    "domicile": domicile, "ville": ville, "organe_base": organe
-                })
-                st.session_state.step_inscription = 3
-                st.rerun()
-
-    elif st.session_state.step_inscription == 3:
-        with st.form("step3"):
-            st.markdown("### ✍️ Lettre d'Adhésion")
-            source = st.selectbox("Comment nous avez-vous connu ?", ["Réseaux Sociaux", "Bouche à oreille", "Affichage", "Événement"])
-            motivation = st.text_area("Pourquoi souhaitez-vous rejoindre l'AEEMG ?", height=150)
-            st.write("---")
-            accept_rgpd = st.checkbox("Je certifie l'exactitude des informations et accepte la politique de confidentialité.")
-            
-            if st.form_submit_button("Soumettre ma demande"):
-                if accept_rgpd and len(motivation) > 10:
-                    data = st.session_state.temp_user
-                    data.update({"motivation": motivation, "source": source, "statut": "en_attente", "cotisation": False})
-                    try:
-                        supabase.table("membres").insert(data).execute()
-                        st.balloons()
-                        st.success("Demande envoyée ! Votre compte est en attente de validation.")
-                        st.session_state.step_inscription = 1
-                    except Exception as e:
-                        st.error("Erreur : Cet email est déjà utilisé.")
-                else: st.warning("Veuillez remplir votre motivation et accepter les conditions.")
-
-elif menu == "🔑 Connexion":
-    st.markdown("<h1 style='text-align: center; color: white;'>🔑 Accès Membre</h1>", unsafe_allow_html=True)
-    _, cent, _ = st.columns([1, 1.2, 1])
-    with cent:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        e_l = st.text_input("Email")
-        p_l = st.text_input("Mot de passe", type="password")
-        if st.button("Se connecter"):
-            res = supabase.table("membres").select("*").eq("email", e_l).eq("password", hasher_password(p_l)).execute()
-            if res.data:
-                user = res.data[0]
-                statut = user.get('statut', 'en_attente')
-                if statut == "approuve":
-                    st.session_state.connecte, st.session_state.user_info = True, user
-                    st.rerun()
-                else:
-                    st.warning("⏳ Adhésion en cours d'examen. Revenez bientôt !")
-            else: st.error("Email ou mot de passe incorrect.")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-elif menu == "🏠 Tableau de Bord":
-    if st.session_state.connecte:
-        u = st.session_state.user_info
-        st.markdown(f"""<div style='text-align: center; padding-bottom: 30px;'>
-            <img src='https://api.dicebear.com/7.x/avataaars/svg?seed={u.get('nom')}' style='border-radius: 50%; width: 130px; background: white; border: 4px solid #D4AF37;'>
-            <h1 style='color: white; margin-bottom:0;'>{u.get('prenom')} {u.get('nom')}</h1>
-            <p style='color: #D4AF37;'>Membre de {u.get('organe_base')}</p>
-        </div>""", unsafe_allow_html=True)
-        
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            st.markdown(f"""<div class="glass-card">
-                <h4 style='color:#D4AF37'>📍 Info</h4>
-                <p>Ville: {u.get('ville')}<br>Domicile: {u.get('domicile')}</p>
-            </div>""", unsafe_allow_html=True)
-        with c2:
-            status_c = "✅ Payée" if u.get('cotisation') else "❌ À régler"
-            st.markdown(f"""<div class="glass-card">
-                <h4 style='color:#D4AF37'>💳 Cotisation</h4>
-                <p style='font-size: 1.2em;'>{status_c}</p>
-            </div>""", unsafe_allow_html=True)
-        with c3:
-            st.markdown(f"""<div class="glass-card">
-                <h4 style='color:#D4AF37'>🆔 Membre</h4>
-                <p>ID : #00{u.get('id')}</p>
-            </div>""", unsafe_allow_html=True)
-    else: st.warning("Veuillez vous connecter.")
-
 elif menu == "🛠️ Admin":
     if st.session_state.connecte and st.session_state.user_info.get('email') == "nernonedouard99@gmail.com":
         st.title("🛠️ Gestion AEEMG")
@@ -206,17 +7,19 @@ elif menu == "🛠️ Admin":
             res = supabase.table("membres").select("*").eq("statut", "en_attente").execute()
             if not res.data: 
                 st.info("Aucune demande d'adhésion en attente.")
-            for m in res.data:
-                # Correction du titre de l'expander pour éviter le bug visuel
-                with st.expander(f"👤 Dossier de {m['prenom']} {m['nom']}"):
-                    st.write(f"**Parents :** {m.get('nom_pere')} & {m.get('nom_mere')}")
-                    st.write(f"**Lieu de Naissance :** {m.get('lieu_naissance')}")
-                    st.write(f"**Motivation :**")
-                    st.info(m.get('motivation'))
-                    if st.button("Approuver l'adhésion", key=f"app_{m['id']}"):
-                        supabase.table("membres").update({"statut": "approuve"}).eq("id", m['id']).execute()
-                        st.success(f"Le membre {m['prenom']} a été approuvé !")
-                        st.rerun()
+            else:
+                for m in res.data:
+                    # On utilise un titre simple sans f-string complexe pour l'expander
+                    titre_dossier = f"Dossier de {m['prenom']} {m['nom']}"
+                    with st.expander(titre_dossier):
+                        st.write(f"**Parents :** {m.get('nom_pere')} & {m.get('nom_mere')}")
+                        st.write(f"**Lieu de Naissance :** {m.get('lieu_naissance')}")
+                        st.write(f"**Motivation :**")
+                        st.info(m.get('motivation'))
+                        if st.button("Approuver l'adhésion", key=f"app_{m['id']}"):
+                            supabase.table("membres").update({"statut": "approuve"}).eq("id", m['id']).execute()
+                            st.success(f"Le membre {m['prenom']} a été approuvé !")
+                            st.rerun()
         
         with t2:
             st.subheader("Paiements à valider")
@@ -226,22 +29,19 @@ elif menu == "🛠️ Admin":
                     st.info("Aucun paiement en attente.")
                 else:
                     for p in res_p.data:
-                        col_a, col_b = st.columns([3, 1])
-                        col_a.write(f"📧 {p['email']} | ID Trans: {p['transaction_id']}")
-                        if col_b.button("Valider", key=f"p_{p['id']}"):
-                            supabase.table("paiements").update({"statut": "validé"}).eq("id", p['id']).execute()
-                            supabase.table("membres").update({"cotisation": True}).eq("email", p['email']).execute()
-                            st.success("Paiement validé !")
-                            st.rerun()
+                        # Ici aussi, on simplifie l'affichage
+                        with st.expander(f"Paiement de {p['email']}"):
+                            st.write(f"ID Transaction : {p['transaction_id']}")
+                            if st.button("Confirmer le reçu", key=f"p_{p['id']}"):
+                                supabase.table("paiements").update({"statut": "validé"}).eq("id", p['id']).execute()
+                                supabase.table("membres").update({"cotisation": True}).eq("email", p['email']).execute()
+                                st.success("Paiement validé !")
+                                st.rerun()
             except:
                 st.error("Erreur d'accès à la table paiements.")
 
         with t3:
-            st.subheader("Liste de tous les membres")
+            st.subheader("Liste des membres")
             m_all = supabase.table("membres").select("*").execute()
             if m_all.data:
                 st.dataframe(m_all.data)
-
-elif menu == "🚪 Déconnexion":
-    st.session_state.clear()
-    st.rerun()
