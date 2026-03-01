@@ -43,12 +43,20 @@ st.markdown("""
         border: 1px solid #D4AF37 !important;
         transition: all 0.3s ease;
         height: 45px;
+        width: 100%;
     }
     
     .stButton>button:hover {
         background-color: #047857 !important;
         transform: scale(1.02);
         box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    /* Correction pour les expanders */
+    .stExpander {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -95,7 +103,7 @@ if menu == "📝 Inscription":
                     st.session_state.temp_user['password'] = hasher_password(pwd)
                     st.session_state.step_inscription = 2
                     st.rerun()
-                else: st.error("Veuillez vérifier vos informations.")
+                else: st.error("Veuillez vérifier vos informations (Mots de passe identiques et email valide).")
 
     elif st.session_state.step_inscription == 2:
         with st.form("step2"):
@@ -124,7 +132,7 @@ if menu == "📝 Inscription":
         with st.form("step3"):
             st.markdown("### ✍️ Lettre d'Adhésion")
             source = st.selectbox("Comment nous avez-vous connu ?", ["Réseaux Sociaux", "Bouche à oreille", "Affichage", "Événement"])
-            motivation = st.text_area("Pourquoi souhaitez-vous rejoindre l'AEEMG ?", height=150, help="Justifiez votre motivation ici.")
+            motivation = st.text_area("Pourquoi souhaitez-vous rejoindre l'AEEMG ?", height=150)
             st.write("---")
             accept_rgpd = st.checkbox("Je certifie l'exactitude des informations et accepte la politique de confidentialité.")
             
@@ -138,7 +146,7 @@ if menu == "📝 Inscription":
                         st.success("Demande envoyée ! Votre compte est en attente de validation.")
                         st.session_state.step_inscription = 1
                     except Exception as e:
-                        st.error(f"Erreur : L'email existe peut-être déjà.")
+                        st.error("Erreur : Cet email est déjà utilisé.")
                 else: st.warning("Veuillez remplir votre motivation et accepter les conditions.")
 
 elif menu == "🔑 Connexion":
@@ -196,14 +204,18 @@ elif menu == "🛠️ Admin":
         
         with t1:
             res = supabase.table("membres").select("*").eq("statut", "en_attente").execute()
-            if not res.data: st.info("Aucune demande.")
+            if not res.data: 
+                st.info("Aucune demande d'adhésion en attente.")
             for m in res.data:
-                with st.expander(f"Demande : {m['prenom']} {m['nom']}"):
-                    st.write(f"**Motivation :** {m['motivation']}")
-                    st.write(f"**Parents :** {m['nom_pere']} & {m['nom_mere']}")
-                    if st.button("Approuver ce membre", key=f"app_{m['id']}"):
+                # Correction du titre de l'expander pour éviter le bug visuel
+                with st.expander(f"👤 Dossier de {m['prenom']} {m['nom']}"):
+                    st.write(f"**Parents :** {m.get('nom_pere')} & {m.get('nom_mere')}")
+                    st.write(f"**Lieu de Naissance :** {m.get('lieu_naissance')}")
+                    st.write(f"**Motivation :**")
+                    st.info(m.get('motivation'))
+                    if st.button("Approuver l'adhésion", key=f"app_{m['id']}"):
                         supabase.table("membres").update({"statut": "approuve"}).eq("id", m['id']).execute()
-                        st.success("Approuvé !")
+                        st.success(f"Le membre {m['prenom']} a été approuvé !")
                         st.rerun()
         
         with t2:
@@ -211,15 +223,25 @@ elif menu == "🛠️ Admin":
             try:
                 res_p = supabase.table("paiements").select("*").eq("statut", "en attente").execute()
                 if not res_p.data:
-                    st.info("Aucun paiement en attente de validation.")
+                    st.info("Aucun paiement en attente.")
                 else:
                     for p in res_p.data:
                         col_a, col_b = st.columns([3, 1])
-                        col_a.write(f"📧 {p['email']} | ID: {p['transaction_id']} | Mode: {p.get('mode', 'N/A')}")
-                        if col_b.button("Confirmer", key=f"p_{p['id']}"):
+                        col_a.write(f"📧 {p['email']} | ID Trans: {p['transaction_id']}")
+                        if col_b.button("Valider", key=f"p_{p['id']}"):
                             supabase.table("paiements").update({"statut": "validé"}).eq("id", p['id']).execute()
                             supabase.table("membres").update({"cotisation": True}).eq("email", p['email']).execute()
-                            st.success(f"Paiement de {p['email']} validé !")
+                            st.success("Paiement validé !")
                             st.rerun()
-            except Exception as e:
-                st.info("La table 'paiements' n'est pas encore configurée ou est vide.")
+            except:
+                st.error("Erreur d'accès à la table paiements.")
+
+        with t3:
+            st.subheader("Liste de tous les membres")
+            m_all = supabase.table("membres").select("*").execute()
+            if m_all.data:
+                st.dataframe(m_all.data)
+
+elif menu == "🚪 Déconnexion":
+    st.session_state.clear()
+    st.rerun()
