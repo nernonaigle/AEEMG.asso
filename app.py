@@ -121,6 +121,34 @@ elif menu == "💳 Cotisations":
                 st.error("Entrez l'ID de transaction")
     else:
         st.warning("Veuillez vous connecter.")
+elif menu == "📂 Documents":
+    st.markdown("<h1>📂 Bibliothèque de l'AEEMG</h1>", unsafe_allow_html=True)
+    st.write("Retrouvez ici tous les documents officiels et ressources utiles.")
+
+    # Organisation par catégories
+    cat = st.tabs(["📜 Administratif", "📚 Études", "🌙 Religieux"])
+
+    with cat[0]:
+        st.subheader("Documents de l'Association")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info("📄 Statuts de l'AEEMG")
+            # Note : Remplace l'URL par le lien de ton vrai fichier PDF plus tard
+            st.download_button("Télécharger le PDF", "Lien_vers_ton_fichier", file_name="statuts_aeemg.pdf")
+        
+        with col2:
+            st.info("📄 Règlement Intérieur")
+            st.download_button("Télécharger le PDF", "Lien_vers_ton_fichier", file_name="reglement_aeemg.pdf")
+
+    with cat[1]:
+        st.subheader("Ressources Académiques")
+        st.write("Bientôt disponible : Guides d'orientation et annales d'examens.")
+        st.warning("⚠️ Cette section est en cours de mise à jour.")
+
+    with cat[2]:
+        st.subheader("Ressources Islamiques")
+        st.success("📖 Calendrier des prières - Conakry")
+        st.download_button("Télécharger le Calendrier", "Lien_vers_ton_fichier", file_name="calendrier_priere.pdf")
 
 elif menu == "🛠️ Admin":
     if st.session_state.connecte and st.session_state.user_info['email'] == "nernonedouard99@gmail.com":
