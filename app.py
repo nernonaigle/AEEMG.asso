@@ -1,10 +1,16 @@
 import streamlit as st
 from supabase import create_client
+import hashlib  # Importation pour la sécurité
 
 # 1. Connexion Supabase
 v_url = "https://ryfrekltrgaqyryzozhc.supabase.co"
 v_key = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
 supabase = create_client(v_url, v_key)
+
+# --- FONCTION DE SÉCURITÉ ---
+def hasher_password(password):
+    """Transforme le mot de passe en une empreinte cryptée unique."""
+    return hashlib.sha256(str.encode(password)).hexdigest()
 
 # --- 🎨 DESIGN ---
 st.set_page_config(page_title="AEEMG - Espace Membre", page_icon="🌙", layout="wide")
@@ -33,7 +39,6 @@ with st.sidebar:
         st.success(f"Bienvenue {st.session_state.user_info['prenom']}")
         options = ["🏠 Tableau de Bord", "💳 Cotisations", "📂 Documents", "📸 Galerie", "🚪 Déconnexion"]
         
-        # Accès Admin pour ton email
         if st.session_state.user_info['email'] == "nernonedouard99@gmail.com":
             options.insert(4, "🛠️ Admin") 
         
@@ -51,7 +56,14 @@ if menu == "📝 Inscription":
             email = st.text_input("Email")
             pwd = st.text_input("Mot de passe", type="password")
             if st.form_submit_button("Créer mon compte"):
-                supabase.table("membres").insert({"nom":nom,"prenom":prenom,"email":email,"password":pwd,"cotisation":False}).execute()
+                # On utilise hasher_password(pwd) pour ne pas stocker le mot de passe en clair
+                supabase.table("membres").insert({
+                    "nom": nom, 
+                    "prenom": prenom, 
+                    "email": email, 
+                    "password": hasher_password(pwd), 
+                    "cotisation": False
+                }).execute()
                 st.success("Compte créé avec succès ! Connectez-vous.")
 
 elif menu == "🔑 Connexion":
@@ -61,7 +73,8 @@ elif menu == "🔑 Connexion":
         e_l = st.text_input("Email")
         p_l = st.text_input("Mot de passe", type="password")
         if st.button("Se connecter"):
-            res = supabase.table("membres").select("*").eq("email", e_l).eq("password", p_l).execute()
+            # On compare l'email ET le hash du mot de passe saisi
+            res = supabase.table("membres").select("*").eq("email", e_l).eq("password", hasher_password(p_l)).execute()
             if res.data:
                 st.session_state.connecte, st.session_state.user_info = True, res.data[0]
                 st.rerun()
