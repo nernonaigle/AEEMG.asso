@@ -122,7 +122,7 @@ elif menu == "🏠 Tableau de Bord":
         st.write(f"**{u['prenom']} {u['nom']}**")
         
         # Modifier la photo
-        with st.expander("📸 Modifier ma photo"):
+        with st.expander("Modifier ma photo"):
             new_url = st.text_input("Lien URL de l'image (JPG/PNG)", value=img_url)
             if st.button("Enregistrer la photo"):
                 supabase.table("membres").update({"photo_url": new_url}).eq("id", u['id']).execute()
