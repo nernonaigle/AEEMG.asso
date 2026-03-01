@@ -208,5 +208,18 @@ elif menu == "🛠️ Admin":
         
         with t2:
             st.subheader("Paiements à valider")
-            res_p = supabase.table("paiements").select("*").eq("statut", "en attente").execute()
-            for p in
+            try:
+                res_p = supabase.table("paiements").select("*").eq("statut", "en attente").execute()
+                if not res_p.data:
+                    st.info("Aucun paiement en attente de validation.")
+                else:
+                    for p in res_p.data:
+                        col_a, col_b = st.columns([3, 1])
+                        col_a.write(f"📧 {p['email']} | ID: {p['transaction_id']} | Mode: {p.get('mode', 'N/A')}")
+                        if col_b.button("Confirmer", key=f"p_{p['id']}"):
+                            supabase.table("paiements").update({"statut": "validé"}).eq("id", p['id']).execute()
+                            supabase.table("membres").update({"cotisation": True}).eq("email", p['email']).execute()
+                            st.success(f"Paiement de {p['email']} validé !")
+                            st.rerun()
+            except Exception as e:
+                st.info("La table 'paiements' n'est pas encore configurée ou est vide.")
