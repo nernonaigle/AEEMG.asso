@@ -2,6 +2,7 @@ import streamlit as st
 from supabase import create_client
 import hashlib
 from datetime import datetime
+import time
 
 # 1. Connexion Supabase
 v_url = "https://ryfrekltrgaqyryzozhc.supabase.co"
@@ -133,11 +134,21 @@ if menu == "📝 Inscription":
                 if accept_rgpd and len(motivation) > 10:
                     data = st.session_state.temp_user
                     data.update({"motivation": motivation, "source": source, "statut": "en_attente", "cotisation": False})
-                    supabase.table("membres").insert(data).execute()
-                    st.balloons()
-                    st.success("Demande envoyée ! En attente de validation.")
-                    st.session_state.step_inscription = 1
-                else: st.warning("Veuillez remplir la motivation.")
+                    try:
+                        supabase.table("membres").insert(data).execute()
+                        st.balloons()
+                        st.success("✅ Demande envoyée ! Redirection vers la connexion...")
+                        
+                        # Réinitialisation pour la prochaine fois
+                        st.session_state.step_inscription = 1
+                        st.session_state.temp_user = {}
+                        
+                        # Pause de 3 secondes pour laisser l'utilisateur voir le message
+                        time.sleep(3)
+                        st.rerun()
+                    except:
+                        st.error("Cet email est déjà inscrit.")
+                else: st.warning("Veuillez remplir la motivation (min. 10 caractères).")
 
 elif menu == "🔑 Connexion":
     st.markdown("<h1 style='text-align: center; color: white;'>🔑 Accès Membre</h1>", unsafe_allow_html=True)
@@ -153,7 +164,7 @@ elif menu == "🔑 Connexion":
                 if user.get('statut') == "approuve":
                     st.session_state.connecte, st.session_state.user_info = True, user
                     st.rerun()
-                else: st.warning("⏳ Adhésion en attente de validation.")
+                else: st.warning("⏳ Votre adhésion est en attente de validation par l'administration.")
             else: st.error("Email ou mot de passe incorrect.")
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -162,7 +173,12 @@ elif menu == "🏠 Tableau de Bord":
         u = st.session_state.user_info
         st.markdown(f"<h1 style='text-align: center; color: white;'>Bienvenue, {u.get('prenom')}</h1>", unsafe_allow_html=True)
         st.write("---")
-        st.markdown(f'<div class="glass-card">Statut : 🟢 Membre Approuvé<br>ID: #00{u.get("id")}</div>', unsafe_allow_html=True)
+        st.markdown(f"""<div class="glass-card">
+            <h3>Félicitations !</h3>
+            <p>Vous êtes officiellement membre approuvé de l'AEEMG.</p>
+            <p><b>ID Membre :</b> #00{u.get('id')}</p>
+            <p><b>Section :</b> {u.get('organe_base')}</p>
+        </div>""", unsafe_allow_html=True)
     else: st.warning("Veuillez vous connecter.")
 
 elif menu == "🛠️ Admin":
@@ -171,14 +187,13 @@ elif menu == "🛠️ Admin":
         t1, t2, t3 = st.tabs(["📢 Adhésions", "💰 Finances", "👥 Membres"])
         with t1:
             res = supabase.table("membres").select("*").eq("statut", "en_attente").execute()
-            if not res.data: st.info("Aucune demande.")
+            if not res.data: st.info("Aucune demande en attente.")
             for m in res.data:
-                # Titre simple pour éviter le bug visuel
                 with st.expander(f"Demande de {m['prenom']} {m['nom']}"):
-                    st.write(f"Motivation: {m.get('motivation')}")
-                    if st.button("Approuver", key=f"app_{m['id']}"):
+                    st.write(f"**Motivation :** {m.get('motivation')}")
+                    if st.button("Approuver le membre", key=f"app_{m['id']}"):
                         supabase.table("membres").update({"statut": "approuve"}).eq("id", m['id']).execute()
-                        st.success("Approuvé !")
+                        st.success("Membre approuvé avec succès !")
                         st.rerun()
 
 elif menu == "🚪 Déconnexion":
