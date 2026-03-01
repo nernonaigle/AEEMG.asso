@@ -64,20 +64,34 @@ if menu == "📝 Inscription":
         - Soutien à la vie étudiante
         """)
 
-elif menu == "🔑 Connexion":
-    st.markdown("<h1 style='text-align: center;'>🔑 Accès Membre</h1>", unsafe_allow_html=True)
-    _, cent, _ = st.columns([1, 1, 1])
-    with cent:
-        e_l = st.text_input("Email")
-        p_l = st.text_input("Mot de passe", type="password")
-        if st.button("Se connecter"):
-            res = supabase.table("membres").select("*").eq("email", e_l).eq("password", p_l).execute()
-            if res.data:
-                st.session_state.connecte, st.session_state.user_info = True, res.data[0]
-                st.rerun()
-            else:
-                st.error("Identifiants incorrects")
+elif menu == "🛠️ Admin":
+    st.markdown("<h1>🛠️ Validation des Cotisations</h1>", unsafe_allow_html=True)
+    
+    # On va chercher les paiements qui sont 'en attente' dans Supabase
+    try:
+        res = supabase.table("paiements").select("*").eq("statut", "en attente").execute()
+        attentes = res.data
 
+        if not attentes:
+            st.info("Aucun paiement en attente pour le moment. ✅")
+        else:
+            st.write(f"Il y a {len(attentes)} demande(s) à vérifier :")
+            for p in attentes:
+                with st.expander(f"Paiement de {p['email']}"):
+                    st.write(f"**ID Transaction :** {p['transaction_id']}")
+                    st.write(f"**Méthode :** {p['mode']}")
+                    
+                    if st.button(f"Valider le membre {p['email']}", key=p['id']):
+                        # 1. On change le statut du paiement en 'validé'
+                        supabase.table("paiements").update({"statut": "validé"}).eq("id", p['id']).execute()
+                        
+                        # 2. On met à jour le profil du membre (cotisation = True)
+                        supabase.table("membres").update({"cotisation": True}).eq("email", p['email']).execute()
+                        
+                        st.success(f"Le profil de {p['email']} a été mis à jour !")
+                        st.rerun()
+    except Exception as e:
+        st.error(f"Erreur : {e}")
 elif menu == "🏠 Tableau de Bord":
     if st.session_state.connecte:
         u = st.session_state.user_info
