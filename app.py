@@ -9,19 +9,57 @@ supabase = create_client(v_url, v_key)
 
 # --- FONCTION DE SÉCURITÉ ---
 def hasher_password(password):
-    """Transforme le mot de passe en une empreinte cryptée unique."""
     return hashlib.sha256(str.encode(password)).hexdigest()
 
-# --- 🎨 DESIGN ---
+# --- 🎨 DESIGN MODERNE (CSS) ---
 st.set_page_config(page_title="AEEMG - Espace Membre", page_icon="🌙", layout="wide")
 
 st.markdown("""
 <style>
-.stApp {
-background: linear-gradient(rgba(18, 54, 38, 0.7), rgba(18, 54, 38, 0.7)),
-url("WhatsApp Image 2026-02-14 at 18.08.42.jpeg") no-repeat center center fixed;
-background-size: cover !important;
-}
+    /* Chargement d'une police moderne */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+    
+    html, body, [class*="st-"] {
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* Fond d'écran avec overlay sombre */
+    .stApp {
+        background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+        url("https://images.unsplash.com/photo-1518005020250-6eb5f3f2754d?q=80&w=2000") no-repeat center center fixed;
+        background-size: cover !important;
+    }
+
+    /* Effet de verre (Glassmorphism) pour les cartes */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        margin-bottom: 20px;
+        color: white;
+    }
+
+    /* Style des boutons */
+    .stButton>button {
+        border-radius: 12px !important;
+        background-color: #2D6A4F !important;
+        color: white !important;
+        border: none !important;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    .stButton>button:hover {
+        background-color: #40916C !important;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    /* Cacher le menu Streamlit pour faire plus "App" */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -31,207 +69,180 @@ if "connecte" not in st.session_state:
 
 # --- NAVIGATION ---
 with st.sidebar:
-    st.markdown("<h1 style='text-align: center;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #D4AF37;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
     st.write("---")
     if not st.session_state.connecte:
         menu = st.radio("Navigation", ["🔑 Connexion", "📝 Inscription"])
     else:
-        st.success(f"Bienvenue {st.session_state.user_info['prenom']}")
+        st.markdown(f"🟢 **{st.session_state.user_info['prenom']}** (Membre)")
         options = ["🏠 Tableau de Bord", "💳 Cotisations", "📂 Documents", "📸 Galerie", "🚪 Déconnexion"]
-        
         if st.session_state.user_info['email'] == "nernonedouard99@gmail.com":
             options.insert(4, "🛠️ Admin") 
-        
-        menu = st.radio("Espace Privé", options)
+        menu = st.radio("Menu Principal", options)
 
 # --- CONTENU DES PAGES ---
 
 if menu == "📝 Inscription":
-    st.markdown("<h1>✨ Rejoindre la communauté</h1>", unsafe_allow_html=True)
-    col1, _ = st.columns([1, 1])
-    with col1:
-        with st.form("inscription"):
-            nom = st.text_input("Nom")
-            prenom = st.text_input("Prénom")
-            email = st.text_input("Email")
-            pwd = st.text_input("Mot de passe", type="password")
-            if st.form_submit_button("Créer mon compte"):
-                supabase.table("membres").insert({
-                    "nom": nom, 
-                    "prenom": prenom, 
-                    "email": email, 
-                    "password": hasher_password(pwd), 
-                    "cotisation": False
-                }).execute()
-                st.success("Compte créé avec succès ! Connectez-vous.")
+    st.markdown("<h1 style='color: white;'>✨ Créer un compte</h1>", unsafe_allow_html=True)
+    with st.container():
+        col1, _ = st.columns([1.5, 2])
+        with col1:
+            with st.form("inscription"):
+                nom = st.text_input("Nom")
+                prenom = st.text_input("Prénom")
+                email = st.text_input("Email")
+                pwd = st.text_input("Mot de passe", type="password")
+                if st.form_submit_button("S'inscrire maintenant"):
+                    supabase.table("membres").insert({
+                        "nom": nom, "prenom": prenom, "email": email, 
+                        "password": hasher_password(pwd), "cotisation": False
+                    }).execute()
+                    st.success("Bienvenue ! Connectez-vous maintenant.")
 
 elif menu == "🔑 Connexion":
-    st.markdown("<h1 style='text-align: center;'>🔑 Accès Membre</h1>", unsafe_allow_html=True)
-    _, cent, _ = st.columns([1, 1, 1])
+    st.markdown("<h1 style='text-align: center; color: white;'>🔑 Connexion</h1>", unsafe_allow_html=True)
+    _, cent, _ = st.columns([1, 1.2, 1])
     with cent:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         e_l = st.text_input("Email")
         p_l = st.text_input("Mot de passe", type="password")
-        if st.button("Se connecter"):
+        if st.button("Entrer dans l'espace membre"):
             res = supabase.table("membres").select("*").eq("email", e_l).eq("password", hasher_password(p_l)).execute()
             if res.data:
                 st.session_state.connecte, st.session_state.user_info = True, res.data[0]
                 st.rerun()
             else:
                 st.error("Identifiants incorrects")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 elif menu == "🏠 Tableau de Bord":
     if st.session_state.connecte:
         u = st.session_state.user_info
+        
+        # Header Profil
         st.markdown(f"""
-            <div style='text-align: center; padding: 20px;'>
-                <img src='https://www.w3schools.com/howto/img_avatar.png' style='border-radius: 50%; width: 120px; height: 120px; border: 3px solid #2D6A4F; background-color: white;'>
-                <h1 style='margin-top: 10px;'>{u['prenom']} {u['nom']}</h1>
-                <p style='color: #ccc; font-style: italic;'>{u.get('bio', 'Membre de la communauté AEEMG')}</p>
+            <div style='text-align: center; padding: 30px;'>
+                <img src='https://api.dicebear.com/7.x/avataaars/svg?seed={u['nom']}' style='border-radius: 50%; width: 150px; background: white; padding: 5px; border: 4px solid #D4AF37;'>
+                <h1 style='color: white; margin-bottom: 0;'>{u['prenom']} {u['nom']}</h1>
+                <p style='color: #D4AF37; font-size: 1.2em;'>{u.get('bio', 'Membre Officiel AEEMG')}</p>
             </div>
         """, unsafe_allow_html=True)
+
+        # Grille d'informations
+        c1, c2, c3 = st.columns(3)
         
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### 📋 Mes Infos")
-            st.write(f"📧 Email : {u['email']}")
-            st.write(f"📞 Tel : {u.get('telephone', 'Non renseigné')}")
-            st.write(f"📍 Ville : {u.get('ville', 'Non renseignée')}")
-            with st.expander("⚙️ Modifier mes infos"):
-                with st.form("update_profil"):
-                    new_tel = st.text_input("Téléphone", value=u.get('telephone', ''))
-                    new_ville = st.text_input("Ville", value=u.get('ville', ''))
-                    new_bio = st.text_area("Bio", value=u.get('bio', ''))
-                    if st.form_submit_button("Enregistrer"):
-                        supabase.table("membres").update({"telephone": new_tel, "ville": new_ville, "bio": new_bio}).eq("email", u['email']).execute()
-                        st.success("Enregistré ! Reconnectez-vous pour actualiser.")
-        
-        with col2:
-            st.markdown("### 💎 Mon Statut")
-            if u.get('cotisation'):
-                st.success("Membre à jour ✅")
-            else:
-                st.warning("Cotisation à régler ❌")
-        
-        st.write("---")
-        st.markdown("### 📢 Fil d'actualité")
-        try:
-            res_ann = supabase.table("annonces").select("*").order("date", desc=True).limit(1).execute()
-            if res_ann.data:
-                ann = res_ann.data[0]
-                if ann['important']:
-                    st.error(f"🚨 **IMPORTANT :** {ann['message']}")
+        with c1:
+            st.markdown(f"""<div class="glass-card">
+                <h3 style='margin-top:0'>📍 Localisation</h3>
+                <p>{u.get('ville', 'Non définie')}</p>
+                <h3 style='margin-top:10px'>📧 Contact</h3>
+                <p>{u['email']}</p>
+            </div>""", unsafe_allow_html=True)
+
+        with c2:
+            status_color = "#2D6A4F" if u.get('cotisation') else "#941B0C"
+            status_text = "À JOUR" if u.get('cotisation') else "NON RÉGLÉE"
+            st.markdown(f"""<div class="glass-card" style="text-align:center;">
+                <h3>💎 Statut Cotisation</h3>
+                <div style="background:{status_color}; padding: 10px; border-radius: 10px; font-weight: bold;">
+                    {status_text}
+                </div>
+                <p style="margin-top:15px; font-size: 0.8em;">ID Membre: #00{u.get('id', '0')}</p>
+            </div>""", unsafe_allow_html=True)
+
+        with c3:
+            st.markdown("""<div class="glass-card">
+                <h3 style='margin-top:0'>📢 Dernière Annonce</h3>
+            """, unsafe_allow_html=True)
+            try:
+                res_ann = supabase.table("annonces").select("*").order("date", desc=True).limit(1).execute()
+                if res_ann.data:
+                    ann = res_ann.data[0]
+                    st.write(ann['message'])
                 else:
-                    st.info(f"💡 {ann['message']}")
-            else:
-                st.info("💡 Bienvenue sur votre nouvel espace membre AEEMG !")
-        except:
-            st.info("💡 Fil d'actualité en attente de configuration.")
+                    st.write("Aucune annonce pour le moment.")
+            except:
+                st.write("Annonces en cours...")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # Formulaire de mise à jour caché dans un expander stylisé
+        with st.expander("👤 Modifier mon profil"):
+            with st.form("update_profil"):
+                col_a, col_b = st.columns(2)
+                new_tel = col_a.text_input("Téléphone", value=u.get('telephone', ''))
+                new_ville = col_b.text_input("Ville", value=u.get('ville', ''))
+                new_bio = st.text_area("Ma Bio", value=u.get('bio', ''))
+                if st.form_submit_button("Mettre à jour mon profil"):
+                    supabase.table("membres").update({"telephone": new_tel, "ville": new_ville, "bio": new_bio}).eq("email", u['email']).execute()
+                    st.success("Profil actualisé ! Reconnectez-vous.")
     else:
         st.warning("Veuillez vous connecter.")
 
 elif menu == "💳 Cotisations":
     if st.session_state.connecte:
-        st.markdown("<h1>💳 Ma Cotisation</h1>", unsafe_allow_html=True)
-        u = st.session_state.user_info
-        st.write("Montant : **50 000 GNF / an**")
-        mode = st.selectbox("Mode de paiement", ["Orange Money", "Moov Money"])
-        trans_id = st.text_input("ID de transaction")
-        if st.button("Valider le paiement"):
-            if trans_id:
-                supabase.table("paiements").insert({"email": u['email'], "transaction_id": trans_id, "mode": mode, "statut": "en attente"}).execute()
-                st.success("Demande envoyée à l'admin !")
-            else:
-                st.error("Entrez l'ID de transaction")
-    else:
-        st.warning("Veuillez vous connecter.")
-
-elif menu == "📂 Documents":
-    st.markdown("<h1>📂 Bibliothèque de l'AEEMG</h1>", unsafe_allow_html=True)
-    cat = st.tabs(["📜 Administratif", "📚 Études", "🌙 Religieux"])
-    with cat[0]:
-        st.subheader("Documents de l'Association")
-        c1, c2 = st.columns(2)
-        with c1:
-            st.info("📄 Statuts de l'AEEMG")
-            st.download_button("Télécharger", "Contenu PDF", file_name="statuts_aeemg.pdf")
-        with c2:
-            st.info("📄 Règlement Intérieur")
-            st.download_button("Télécharger", "Contenu PDF", file_name="reglement_aeemg.pdf")
-    with cat[1]:
-        st.subheader("Ressources Académiques")
-        st.warning("⚠️ Section en cours de mise à jour.")
-    with cat[2]:
-        st.subheader("Ressources Islamiques")
-        st.success("📖 Calendrier des prières - Conakry")
-        st.download_button("Télécharger le Calendrier", "Contenu PDF", file_name="calendrier_priere.pdf")
+        st.markdown("<h1 style='color: white;'>💳 Paiement de la Cotisation</h1>", unsafe_allow_html=True)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            st.markdown("""<div class="glass-card">
+                <h3>Détails du paiement</h3>
+                <p>Montant annuel : <b>50 000 GNF</b></p>
+                <p>Votre contribution aide l'AEEMG à organiser des événements et soutenir les étudiants.</p>
+            </div>""", unsafe_allow_html=True)
+        with col2:
+            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+            mode = st.selectbox("Méthode", ["Orange Money", "Moov Money"])
+            trans_id = st.text_input("ID de la Transaction")
+            if st.button("Envoyer la preuve de paiement"):
+                if trans_id:
+                    supabase.table("paiements").insert({"email": st.session_state.user_info['email'], "transaction_id": trans_id, "mode": mode, "statut": "en attente"}).execute()
+                    st.success("Reçu envoyé ! Un admin va valider cela sous peu.")
+            st.markdown('</div>', unsafe_allow_html=True)
 
 elif menu == "📸 Galerie":
-    st.markdown("<h1>📸 Vie de l'Association</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: white;'>📸 Galerie Photo</h1>", unsafe_allow_html=True)
+    # Simulation d'une galerie moderne
     photos = [
-        {"url": "https://images.unsplash.com/photo-1542810634-71277d95dcbb", "caption": "Conférence AEEMG"},
-        {"url": "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16", "caption": "Rupture de Jeûne"},
-        {"url": "https://images.unsplash.com/photo-1523240715632-d984bb4b9749", "caption": "Réunion des membres"},
-        {"url": "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846", "caption": "Formation Étudiante"}
+        "https://images.unsplash.com/photo-1523240715632-d984bb4b9749",
+        "https://images.unsplash.com/photo-1542810634-71277d95dcbb",
+        "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846",
+        "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16"
     ]
     cols = st.columns(2)
-    for i, photo in enumerate(photos):
+    for i, url in enumerate(photos):
         with cols[i % 2]:
-            st.image(photo['url'], caption=photo['caption'], use_container_width=True)
+            st.markdown(f'<div class="glass-card"><img src="{url}" style="width:100%; border-radius:10px;"></div>', unsafe_allow_html=True)
 
 elif menu == "🛠️ Admin":
     if st.session_state.connecte and st.session_state.user_info['email'] == "nernonedouard99@gmail.com":
-        st.title("🛠️ Espace Administration")
-        tab_p, tab_m, tab_a = st.tabs(["💰 Valider Paiements", "👥 Liste des Membres", "📢 Publier Annonce"])
+        st.title("🛠️ Administration")
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        tab_p, tab_m, tab_a = st.tabs(["💰 Paiements", "👥 Membres", "📢 Annonces"])
         
         with tab_p:
             res = supabase.table("paiements").select("*").eq("statut", "en attente").execute()
-            attentes = res.data
-            if not attentes:
-                st.info("Aucun paiement en attente. ✅")
-            else:
-                for p in attentes:
-                    with st.expander(f"Paiement de {p['email']}"):
-                        st.write(f"ID: {p['transaction_id']} | Mode: {p['mode']}")
-                        if st.button(f"Valider {p['email']}", key=f"val_{p['id']}"):
-                            supabase.table("paiements").update({"statut": "validé"}).eq("id", p['id']).execute()
-                            supabase.table("membres").update({"cotisation": True}).eq("email", p['email']).execute()
-                            st.success("Validé !")
-                            st.rerun()
+            if not res.data: st.info("Tout est à jour !")
+            for p in res.data:
+                col_p1, col_p2 = st.columns([3,1])
+                col_p1.write(f"Paiement de : {p['email']} (ID: {p['transaction_id']})")
+                if col_p2.button("Valider", key=f"val_{p['id']}"):
+                    supabase.table("paiements").update({"statut": "validé"}).eq("id", p['id']).execute()
+                    supabase.table("membres").update({"cotisation": True}).eq("email", p['email']).execute()
+                    st.rerun()
 
         with tab_m:
-            st.subheader("Rechercher un membre")
-            search_query = st.text_input("Entrez un nom ou un email", "").lower()
-            res_m = supabase.table("membres").select("*").execute()
-            membres = res_m.data
-            
-            if membres:
-                filtered = [m for m in membres if search_query in m['nom'].lower() or search_query in m['prenom'].lower() or search_query in m['email'].lower()]
-                st.write(f"Total membres : **{len(membres)}** | Filtrés : **{len(filtered)}**")
-                
-                for m in filtered:
-                    status = "✅ Payé" if m.get('cotisation') else "❌ Non payé"
-                    with st.expander(f"{m['prenom']} {m['nom']} ({m['email']})"):
-                        st.write(f"**Ville :** {m.get('ville', 'N/A')}")
-                        st.write(f"**Téléphone :** {m.get('telephone', 'N/A')}")
-                        st.write(f"**Statut Cotisation :** {status}")
-                        if not m.get('cotisation'):
-                            if st.button("Marquer comme payé", key=f"pay_{m['email']}_{m['id']}"):
-                                supabase.table("membres").update({"cotisation": True}).eq("email", m['email']).execute()
-                                st.success(f"Statut de {m['prenom']} mis à jour !")
-                                st.rerun()
-            else:
-                st.info("Aucun membre inscrit pour le moment.")
-        
+            sq = st.text_input("Rechercher un membre").lower()
+            m_res = supabase.table("membres").select("*").execute()
+            for m in m_res.data:
+                if sq in m['nom'].lower() or sq in m['email'].lower():
+                    st.write(f"👤 {m['prenom']} {m['nom']} - {m['email']} - {'✅' if m['cotisation'] else '❌'}")
+
         with tab_a:
-            st.subheader("Diffuser un message")
-            with st.form("publish_ann"):
-                msg = st.text_area("Message aux membres")
-                imp = st.checkbox("Urgent / Important")
-                if st.form_submit_button("Publier l'annonce"):
-                    if msg:
-                        supabase.table("annonces").insert({"message": msg, "important": imp}).execute()
-                        st.success("Annonce publiée !")
-                        st.rerun()
+            with st.form("ann"):
+                msg = st.text_area("Nouveau message")
+                if st.form_submit_button("Diffuser"):
+                    supabase.table("annonces").insert({"message": msg, "important": False}).execute()
+                    st.success("Diffusé !")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 elif menu == "🚪 Déconnexion":
     st.session_state.connecte = False
