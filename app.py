@@ -44,25 +44,35 @@ with st.sidebar:
         menu = st.radio("Espace Privé", options)
 # --- CONTENU DES PAGES ---
 
+# --- CONTENU DES PAGES --- (Ligne 40 environ)
+
 if menu == "📝 Inscription":
-    st.markdown("<h1>✨ Rejoindre la communauté</h1>", unsafe_allow_html=True)
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        with st.form("inscription"):
-            nom = st.text_input("Nom")
-            prenom = st.text_input("Prénom")
-            email = st.text_input("Email")
-            pwd = st.text_input("Mot de passe", type="password")
-            if st.form_submit_button("Créer mon compte"):
-                supabase.table("membres").insert({"nom":nom,"prenom":prenom,"email":email,"password":pwd,"cotisation":False}).execute()
-                st.success("Compte créé avec succès !")
-    with col2:
-        st.markdown("""
-        ### Pourquoi adhérer ?
-        - Accès aux ressources éducatives
-        - Participation aux événements fraternels
-        - Soutien à la vie étudiante
-        """)
+    # Ton code d'inscription ici...
+
+elif menu == "🔑 Connexion":
+    # Ton code de connexion ici...
+
+elif menu == "🏠 Tableau de Bord":
+    if st.session_state.connecte:
+        # Ton code de profil...
+    else:
+        st.warning("Veuillez vous connecter")
+
+elif menu == "💳 Cotisations":
+    if st.session_state.connecte:
+        # Ton code de paiement...
+    else:
+        st.warning("Veuillez vous connecter")
+
+elif menu == "🛠️ Admin":
+    # Ce bloc doit être placé juste AVANT la déconnexion
+    if st.session_state.connecte:
+        # Ton code Admin...
+
+elif menu == "🚪 Déconnexion":
+    st.session_state.connecte = False
+    st.session_state.user_info = None
+    st.rerun()
 
 elif menu == "🛠️ Admin":
     st.markdown("<h1>🛠️ Validation des Cotisations</h1>", unsafe_allow_html=True)
