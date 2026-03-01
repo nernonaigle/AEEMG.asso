@@ -16,7 +16,7 @@ supabase = create_client(v_url, v_key)
 def hasher_password(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
-# --- 🎨 DESIGN MODERNISÉ (REPRISE DU STYLE PRÉCÉDENT) ---
+# --- 🎨 DESIGN MODERNISÉ ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
@@ -61,7 +61,6 @@ with st.sidebar:
     else:
         st.markdown(f"🟢 **{st.session_state.user_info.get('prenom')}**")
         options = ["🏠 Tableau de Bord", "💳 Cotisations", "📂 Documents", "📸 Galerie", "🚪 Déconnexion"]
-        # Vérification Admin (ton email)
         if st.session_state.user_info.get('email') == "nernonedouard99@gmail.com":
             options.insert(4, "🛠️ Admin")
         menu = st.radio("Menu Principal", options)
@@ -111,18 +110,57 @@ elif menu == "🔑 Connexion":
 
 elif menu == "🏠 Tableau de Bord":
     u = st.session_state.user_info
-    st.markdown(f"<h1 class='gold-text'>Salam, {u['prenom']} !</h1>", unsafe_allow_html=True)
-    
-    # Fil d'actualité simplifié
-    st.markdown("### 📢 Actualités")
-    st.info("📌 Assemblée Générale prévue le 15 Mars 2026. Soyez présents !")
-    
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown(f'<div class="glass-card"><h4>Profil</h4><p>ID: #00{u["id"]}<br>Organe: {u["organe_base"]}</p></div>', unsafe_allow_html=True)
-    with c2:
-        etat = "✅ À jour" if u['cotisation'] else "⚠️ Non payée"
-        st.markdown(f'<div class="glass-card"><h4>Cotisation</h4><p style="font-size:1.5em;">{etat}</p></div>', unsafe_allow_html=True)
+    st.markdown(f"<h1 class='gold-text'>👋 Salam, {u['prenom']} !</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #ccc; margin-top:-15px;'>Ravi de vous revoir dans votre espace membre AEEMG.</p>", unsafe_allow_html=True)
+
+    # --- 📊 LIGNE DE STATISTIQUES ---
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown(f"""<div class="glass-card" style="text-align: center;">
+            <p style="color: #D4AF37; margin-bottom: 5px;">Statut Membre</p>
+            <h2 style="margin: 0;">✨ Actif</h2>
+            <p style="font-size: 0.8em; color: #888;">ID: #00{u['id']}</p>
+        </div>""", unsafe_allow_html=True)
+    with col2:
+        cotis_text = "✅ À jour" if u['cotisation'] else "⚠️ À régler"
+        cotis_color = "#10b981" if u['cotisation'] else "#ef4444"
+        st.markdown(f"""<div class="glass-card" style="text-align: center;">
+            <p style="color: #D4AF37; margin-bottom: 5px;">Cotisation 2026</p>
+            <h2 style="margin: 0; color: {cotis_color};">{cotis_text}</h2>
+            <p style="font-size: 0.8em; color: #888;">{u['organe_base']}</p>
+        </div>""", unsafe_allow_html=True)
+    with col3:
+        st.markdown(f"""<div class="glass-card" style="text-align: center;">
+            <p style="color: #D4AF37; margin-bottom: 5px;">Engagement</p>
+            <h2 style="margin: 0;">🥈 Argent</h2>
+            <p style="font-size: 0.8em; color: #888;">Fidèle membre</p>
+        </div>""", unsafe_allow_html=True)
+
+    # --- 📢 ACTUALITÉS & ACTIONS ---
+    c_actu, c_action = st.columns([2, 1])
+    with c_actu:
+        st.markdown("### 📢 Fil d'Actualités")
+        st.markdown(f"""<div class="glass-card" style="padding: 15px; border-left: 5px solid #D4AF37;">
+            <small style="color: #888;">15 Mars 2026</small>
+            <h4 style="margin: 5px 0;">🌙 Assemblée Générale</h4>
+            <p style="font-size: 0.9em;">Rappel : Présence obligatoire pour tous les membres du Bureau National.</p>
+        </div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="glass-card" style="padding: 15px; border-left: 5px solid #065f46;">
+            <small style="color: #888;">01 Mars 2026</small>
+            <h4 style="margin: 5px 0;">✨ Nouveau portail membre</h4>
+            <p style="font-size: 0.9em;">Votre espace membre a été mis à jour pour une meilleure expérience.</p>
+        </div>""", unsafe_allow_html=True)
+
+    with c_action:
+        st.markdown("### ⚡ Actions Rapides")
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        if st.button("📄 Ma Carte Membre"):
+            st.info("Fonctionnalité bientôt disponible !")
+        if st.button("💳 Payer Cotisation"):
+            st.success("Redirigez-vous vers l'onglet Cotisation")
+        if st.button("📂 Mes Documents"):
+            st.write("Accès rapide activé")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 elif menu == "💳 Cotisations":
     st.markdown("<h1 class='gold-text'>💳 Ma Cotisation</h1>", unsafe_allow_html=True)
@@ -146,7 +184,6 @@ elif menu == "📂 Documents":
 elif menu == "📸 Galerie":
     st.markdown("<h1 class='gold-text'>📸 Galerie Photos</h1>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
-    # Images d'exemple
     c1.image("https://images.unsplash.com/photo-1523240715630-991c2e82bc28?w=500", caption="Conférence 2025")
     c2.image("https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=500", caption="Sortie de cohésion")
     c3.image("https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=500", caption="Séminaire Étudiant")
@@ -155,7 +192,6 @@ elif menu == "🛠️ Admin":
     if st.session_state.user_info.get('email') == "nernonedouard99@gmail.com":
         st.markdown("<h1 class='gold-text'>🛠️ Espace Administrateur</h1>", unsafe_allow_html=True)
         tab1, tab2 = st.tabs(["👥 Validation Membres", "📊 Statistiques"])
-        
         with tab1:
             res = supabase.table("membres").select("*").eq("statut", "en_attente").execute()
             if not res.data: st.info("Aucune demande en attente.")
@@ -166,7 +202,6 @@ elif menu == "🛠️ Admin":
                         supabase.table("membres").update({"statut": "approuve"}).eq("id", m['id']).execute()
                         st.success("Membre approuvé !")
                         st.rerun()
-        
         with tab2:
             count = supabase.table("membres").select("id", count="exact").execute()
             st.metric("Total Membres", count.count if count.count else 0)
