@@ -33,7 +33,7 @@ with st.sidebar:
         st.success(f"Bienvenue {st.session_state.user_info['prenom']}")
         options = ["🏠 Tableau de Bord", "💳 Cotisations", "📂 Documents", "🚪 Déconnexion"]
         
-        # Ton accès Admin
+        # Accès Admin pour ton email
         if st.session_state.user_info['email'] == "nernonedouard99@gmail.com":
             options.insert(3, "🛠️ Admin")
         
@@ -43,7 +43,7 @@ with st.sidebar:
 
 if menu == "📝 Inscription":
     st.markdown("<h1>✨ Rejoindre la communauté</h1>", unsafe_allow_html=True)
-    col1, col2 = st.columns([1, 1])
+    col1, _ = st.columns([1, 1])
     with col1:
         with st.form("inscription"):
             nom = st.text_input("Nom")
@@ -101,8 +101,22 @@ elif menu == "🏠 Tableau de Bord":
             else:
                 st.warning("Cotisation à régler ❌")
         
+        # --- 📢 FIL D'ACTUALITÉ DYNAMIQUE ---
         st.write("---")
-        st.info("💡 Annonce : La réunion mensuelle aura lieu dimanche à 10h.")
+        st.markdown("### 📢 Fil d'actualité")
+        try:
+            res_ann = supabase.table("annonces").select("*").order("date", desc=True).limit(1).execute()
+            if res_ann.data:
+                ann = res_ann.data[0]
+                if ann['important']:
+                    st.error(f"🚨 **IMPORTANT :** {ann['message']}")
+                else:
+                    st.info(f"💡 {ann['message']}")
+            else:
+                st.info("💡 Bienvenue sur votre nouvel espace membre AEEMG !")
+        except:
+            st.info("💡 Fil d'actualité en attente de configuration.")
+
     else:
         st.warning("Veuillez vous connecter.")
 
@@ -121,50 +135,61 @@ elif menu == "💳 Cotisations":
                 st.error("Entrez l'ID de transaction")
     else:
         st.warning("Veuillez vous connecter.")
+
 elif menu == "📂 Documents":
     st.markdown("<h1>📂 Bibliothèque de l'AEEMG</h1>", unsafe_allow_html=True)
     st.write("Retrouvez ici tous les documents officiels et ressources utiles.")
-
-    # Organisation par catégories
     cat = st.tabs(["📜 Administratif", "📚 Études", "🌙 Religieux"])
 
     with cat[0]:
         st.subheader("Documents de l'Association")
-        col1, col2 = st.columns(2)
-        with col1:
+        c1, c2 = st.columns(2)
+        with c1:
             st.info("📄 Statuts de l'AEEMG")
-            # Note : Remplace l'URL par le lien de ton vrai fichier PDF plus tard
-            st.download_button("Télécharger le PDF", "Lien_vers_ton_fichier", file_name="statuts_aeemg.pdf")
-        
-        with col2:
+            st.download_button("Télécharger", "Contenu PDF", file_name="statuts_aeemg.pdf")
+        with c2:
             st.info("📄 Règlement Intérieur")
-            st.download_button("Télécharger le PDF", "Lien_vers_ton_fichier", file_name="reglement_aeemg.pdf")
+            st.download_button("Télécharger", "Contenu PDF", file_name="reglement_aeemg.pdf")
 
     with cat[1]:
         st.subheader("Ressources Académiques")
-        st.write("Bientôt disponible : Guides d'orientation et annales d'examens.")
-        st.warning("⚠️ Cette section est en cours de mise à jour.")
+        st.warning("⚠️ Section en cours de mise à jour.")
 
     with cat[2]:
         st.subheader("Ressources Islamiques")
         st.success("📖 Calendrier des prières - Conakry")
-        st.download_button("Télécharger le Calendrier", "Lien_vers_ton_fichier", file_name="calendrier_priere.pdf")
+        st.download_button("Télécharger le Calendrier", "Contenu PDF", file_name="calendrier_priere.pdf")
 
 elif menu == "🛠️ Admin":
     if st.session_state.connecte and st.session_state.user_info['email'] == "nernonedouard99@gmail.com":
-        st.markdown("<h1>🛠️ Validation des Cotisations</h1>", unsafe_allow_html=True)
-        res = supabase.table("paiements").select("*").eq("statut", "en attente").execute()
-        attentes = res.data
-        if not attentes:
-            st.info("Aucun paiement en attente. ✅")
-        else:
-            for p in attentes:
-                with st.expander(f"Paiement de {p['email']}"):
-                    st.write(f"ID: {p['transaction_id']} | Mode: {p['mode']}")
-                    if st.button(f"Valider {p['email']}", key=p['id']):
-                        supabase.table("paiements").update({"statut": "validé"}).eq("id", p['id']).execute()
-                        supabase.table("membres").update({"cotisation": True}).eq("email", p['email']).execute()
-                        st.success("Validé !")
+        st.title("🛠️ Espace Administration")
+        
+        tab_p, tab_a = st.tabs(["💰 Valider Paiements", "📢 Publier Annonce"])
+        
+        with tab_p:
+            res = supabase.table("paiements").select("*").eq("statut", "en attente").execute()
+            attentes = res.data
+            if not attentes:
+                st.info("Aucun paiement en attente. ✅")
+            else:
+                for p in attentes:
+                    with st.expander(f"Paiement de {p['email']}"):
+                        st.write(f"ID: {p['transaction_id']} | Mode: {p['mode']}")
+                        if st.button(f"Valider {p['email']}", key=p['id']):
+                            supabase.table("paiements").update({"statut": "validé"}).eq("id", p['id']).execute()
+                            supabase.table("membres").update({"cotisation": True}).eq("email", p['email']).execute()
+                            st.success("Validé !")
+                            st.rerun()
+        
+        with tab_a:
+            st.subheader("Diffuser un message")
+            with st.form("publish_ann"):
+                msg = st.text_area("Message aux membres")
+                imp = st.checkbox("Urgent / Important")
+                if st.form_submit_button("Publier l'annonce"):
+                    if msg:
+                        supabase.table("annonces").insert({"message": msg, "important": imp}).execute()
+                        st.success("Annonce publiée !")
                         st.rerun()
 
 elif menu == "🚪 Déconnexion":
