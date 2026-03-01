@@ -42,9 +42,8 @@ with st.sidebar:
             options.insert(3, "🛠️ Admin") # Ceci ajoute 'Admin' avant 'Déconnexion'
         
         menu = st.radio("Espace Privé", options)
-# --- CONTENU DES PAGES ---
 
-# --- CONTENU DES PAGES --- (Ligne 40 environ)
+# --- CONTENU DES PAGES ---
 
 if menu == "📝 Inscription":
     # Ton code d'inscription ici...
