@@ -56,7 +56,6 @@ if menu == "📝 Inscription":
             email = st.text_input("Email")
             pwd = st.text_input("Mot de passe", type="password")
             if st.form_submit_button("Créer mon compte"):
-                # On utilise hasher_password(pwd) pour ne pas stocker le mot de passe en clair
                 supabase.table("membres").insert({
                     "nom": nom, 
                     "prenom": prenom, 
@@ -73,7 +72,6 @@ elif menu == "🔑 Connexion":
         e_l = st.text_input("Email")
         p_l = st.text_input("Mot de passe", type="password")
         if st.button("Se connecter"):
-            # On compare l'email ET le hash du mot de passe saisi
             res = supabase.table("membres").select("*").eq("email", e_l).eq("password", hasher_password(p_l)).execute()
             if res.data:
                 st.session_state.connecte, st.session_state.user_info = True, res.data[0]
@@ -149,9 +147,7 @@ elif menu == "💳 Cotisations":
 
 elif menu == "📂 Documents":
     st.markdown("<h1>📂 Bibliothèque de l'AEEMG</h1>", unsafe_allow_html=True)
-    st.write("Retrouvez ici tous les documents officiels et ressources utiles.")
     cat = st.tabs(["📜 Administratif", "📚 Études", "🌙 Religieux"])
-
     with cat[0]:
         st.subheader("Documents de l'Association")
         c1, c2 = st.columns(2)
@@ -161,11 +157,9 @@ elif menu == "📂 Documents":
         with c2:
             st.info("📄 Règlement Intérieur")
             st.download_button("Télécharger", "Contenu PDF", file_name="reglement_aeemg.pdf")
-
     with cat[1]:
         st.subheader("Ressources Académiques")
         st.warning("⚠️ Section en cours de mise à jour.")
-
     with cat[2]:
         st.subheader("Ressources Islamiques")
         st.success("📖 Calendrier des prières - Conakry")
@@ -173,25 +167,21 @@ elif menu == "📂 Documents":
 
 elif menu == "📸 Galerie":
     st.markdown("<h1>📸 Vie de l'Association</h1>", unsafe_allow_html=True)
-    st.write("Découvrez les moments forts de nos derniers événements.")
-    
     photos = [
         {"url": "https://images.unsplash.com/photo-1542810634-71277d95dcbb", "caption": "Conférence AEEMG"},
         {"url": "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16", "caption": "Rupture de Jeûne"},
         {"url": "https://images.unsplash.com/photo-1523240715632-d984bb4b9749", "caption": "Réunion des membres"},
         {"url": "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846", "caption": "Formation Étudiante"}
     ]
-
     cols = st.columns(2)
     for i, photo in enumerate(photos):
         with cols[i % 2]:
             st.image(photo['url'], caption=photo['caption'], use_container_width=True)
-            st.write("") 
 
 elif menu == "🛠️ Admin":
     if st.session_state.connecte and st.session_state.user_info['email'] == "nernonedouard99@gmail.com":
         st.title("🛠️ Espace Administration")
-        tab_p, tab_a = st.tabs(["💰 Valider Paiements", "📢 Publier Annonce"])
+        tab_p, tab_m, tab_a = st.tabs(["💰 Valider Paiements", "👥 Liste des Membres", "📢 Publier Annonce"])
         
         with tab_p:
             res = supabase.table("paiements").select("*").eq("statut", "en attente").execute()
@@ -202,11 +192,37 @@ elif menu == "🛠️ Admin":
                 for p in attentes:
                     with st.expander(f"Paiement de {p['email']}"):
                         st.write(f"ID: {p['transaction_id']} | Mode: {p['mode']}")
-                        if st.button(f"Valider {p['email']}", key=p['id']):
+                        if st.button(f"Valider {p['email']}", key=f"val_{p['id']}"):
                             supabase.table("paiements").update({"statut": "validé"}).eq("id", p['id']).execute()
                             supabase.table("membres").update({"cotisation": True}).eq("email", p['email']).execute()
                             st.success("Validé !")
                             st.rerun()
+
+        with tab_m:
+            st.subheader("Rechercher un membre")
+            search_query = st.text_input("Entrez un nom ou un email", "").lower()
+            res_m = supabase.table("membres").select("*").execute()
+            membres = res_m.data
+            
+            if membres:
+                # Filtrage dynamique
+                filtered = [m for m in membres if search_query in m['nom'].lower() or search_query in m['prenom'].lower() or search_query in m['email'].lower()]
+                
+                st.write(f"Total membres : **{len(membres)}** | Filtrés : **{len(filtered)}**")
+                
+                for m in filtered:
+                    status = "✅ Payé" if m.get('cotisation') else "❌ Non payé"
+                    with st.expander(f"{m['prenom']} {m['nom']} ({m['email']})"):
+                        st.write(f"**Ville :** {m.get('ville', 'N/A')}")
+                        st.write(f"**Téléphone :** {m.get('telephone', 'N/A')}")
+                        st.write(f"**Statut Cotisation :** {status}")
+                        if not m.get('cotisation'):
+                            if st.button(f"Marquer comme payé", key=f"pay_{m['email']}"):
+                                supabase.table("membres").update({"cotisation": True}).eq("email", m['email']).execute()
+                                st.success(f"Statut de {m['prenom']} mis à jour !")
+                                st.rerun()
+            else:
+                st.info("Aucun membre inscrit pour le moment.")
         
         with tab_a:
             st.subheader("Diffuser un message")
