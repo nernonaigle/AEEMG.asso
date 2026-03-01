@@ -161,4 +161,19 @@ elif menu == "📂 Documents":
 
 # --- NOUVELLE SECTION : GALERIE ---
 elif menu == "📸 Galerie":
-    st.markdown("<h1>📸 Vie de l'Association</h1>", unsafe_allow
+    st.markdown("<h1>📸 Vie de l'Association</h1>", unsafe_allow_html=True)
+    st.write("Découvrez les moments forts de nos derniers événements.")
+    
+    # Photos d'exemple
+    photos = [
+        {"url": "https://images.unsplash.com/photo-1542810634-71277d95dcbb", "caption": "Conférence AEEMG"},
+        {"url": "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16", "caption": "Rupture de Jeûne"},
+        {"url": "https://images.unsplash.com/photo-1523240715632-d984bb4b9749", "caption": "Réunion des membres"},
+        {"url": "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846", "caption": "Formation Étudiante"}
+    ]
+
+    cols = st.columns(2)
+    for i, photo in enumerate(photos):
+        with cols[i % 2]:
+            st.image(photo['url'], caption=photo['caption'], use_container_width=True)
+            st.write("")
