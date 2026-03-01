@@ -217,10 +217,11 @@ elif menu == "🛠️ Admin":
                         st.write(f"**Téléphone :** {m.get('telephone', 'N/A')}")
                         st.write(f"**Statut Cotisation :** {status}")
                         if not m.get('cotisation'):
-                            if st.button(f"Marquer comme payé", key=f"pay_{m['email']}"):
-                                supabase.table("membres").update({"cotisation": True}).eq("email", m['email']).execute()
-                                st.success(f"Statut de {m['prenom']} mis à jour !")
-                                st.rerun()
+                          # REMPLACE CETTE LIGNE :
+if st.button(f"Marquer comme payé", key=f"pay_{m['email']}"):
+
+# PAR CELLE-CI (on ajoute m['id']) :
+if st.button(f"Marquer comme payé", key=f"pay_{m['email']}_{m['id']}"):
             else:
                 st.info("Aucun membre inscrit pour le moment.")
         
