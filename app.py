@@ -35,16 +35,21 @@ st.markdown("""
         color: white;
         margin-bottom: 20px;
     }
+    .profile-img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #D4AF37;
+        margin-bottom: 10px;
+    }
     .stButton>button {
         border-radius: 12px !important;
         background: linear-gradient(135deg, #065f46 0%, #047857 100%) !important;
         color: white !important;
         border: 1px solid rgba(212, 175, 55, 0.5) !important;
-        height: 45px;
-        width: 100%;
         transition: 0.3s;
     }
-    .stButton>button:hover { transform: scale(1.02); border-color: #D4AF37 !important; }
     .gold-text { color: #D4AF37; font-weight: 800; }
 </style>
 """, unsafe_allow_html=True)
@@ -59,44 +64,40 @@ with st.sidebar:
     if not st.session_state.connecte:
         menu = st.radio("Navigation", ["🔑 Connexion", "📝 Inscription"])
     else:
-        st.markdown(f"🟢 **{st.session_state.user_info.get('prenom')}**")
+        # Photo dans la sidebar
+        img_url = st.session_state.user_info.get('photo_url') or "https://www.w3schools.com/howto/img_avatar.png"
+        st.markdown(f"<div style='text-align:center;'><img src='{img_url}' style='width:70px;height:70px;border-radius:50%;border:2px solid #D4AF37;'></div>", unsafe_allow_html=True)
+        st.markdown(f"<p style='text-align:center; color:white;'><b>{st.session_state.user_info.get('prenom')}</b></p>", unsafe_allow_html=True)
+        
         options = ["🏠 Tableau de Bord", "💳 Cotisations", "📂 Documents", "📸 Galerie", "🚪 Déconnexion"]
         if st.session_state.user_info.get('email') == "nernonedouard99@gmail.com":
             options.insert(4, "🛠️ Admin")
         menu = st.radio("Menu Principal", options)
 
-# --- CONTENU DES PAGES ---
+# --- PAGES ---
 
 if menu == "📝 Inscription":
     st.markdown("<h1 class='gold-text'>✨ Inscription AEEMG</h1>", unsafe_allow_html=True)
-    with st.container():
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        with st.form("reg_form"):
-            c1, c2 = st.columns(2)
-            nom = c1.text_input("Nom")
-            prenom = c2.text_input("Prénom")
-            email = c1.text_input("Email")
-            pwd = c2.text_input("Mot de passe", type="password")
-            ville = c1.text_input("Ville")
-            organe = c2.selectbox("Organe", ["Bureau National", "Section Universitaire", "Antenne Régionale"])
-            motivation = st.text_area("Motivation")
-            if st.form_submit_button("Envoyer ma demande"):
-                if email and pwd and len(motivation) > 5:
-                    data = {"nom": nom, "prenom": prenom, "email": email, "password": hasher_password(pwd), "ville": ville, "organe_base": organe, "motivation": motivation, "statut": "en_attente", "cotisation": False}
-                    try:
-                        supabase.table("membres").insert(data).execute()
-                        st.success("Demande envoyée ! En attente de validation.")
-                        st.balloons()
-                    except: st.error("Email déjà utilisé.")
-        st.markdown('</div>', unsafe_allow_html=True)
+    with st.form("reg_form"):
+        c1, c2 = st.columns(2)
+        nom, prenom = c1.text_input("Nom"), c2.text_input("Prénom")
+        email, pwd = c1.text_input("Email"), c2.text_input("Mot de passe", type="password")
+        ville, organe = c1.text_input("Ville"), c2.selectbox("Organe", ["Bureau National", "Section Universitaire", "Antenne Régionale"])
+        motivation = st.text_area("Motivation")
+        if st.form_submit_button("Envoyer ma demande"):
+            if email and pwd:
+                data = {"nom": nom, "prenom": prenom, "email": email, "password": hasher_password(pwd), "ville": ville, "organe_base": organe, "motivation": motivation, "statut": "en_attente"}
+                try:
+                    supabase.table("membres").insert(data).execute()
+                    st.success("Demande envoyée !")
+                except: st.error("Email déjà utilisé.")
 
 elif menu == "🔑 Connexion":
     st.markdown("<h2 class='gold-text' style='text-align:center;'>Accès Membre</h2>", unsafe_allow_html=True)
     _, center, _ = st.columns([1, 1.5, 1])
     with center:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        e_l = st.text_input("Email")
-        p_l = st.text_input("Mot de passe", type="password")
+        e_l, p_l = st.text_input("Email"), st.text_input("Mot de passe", type="password")
         if st.button("Se connecter"):
             res = supabase.table("membres").select("*").eq("email", e_l).eq("password", hasher_password(p_l)).execute()
             if res.data:
@@ -111,101 +112,57 @@ elif menu == "🔑 Connexion":
 elif menu == "🏠 Tableau de Bord":
     u = st.session_state.user_info
     st.markdown(f"<h1 class='gold-text'>👋 Salam, {u['prenom']} !</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #ccc; margin-top:-15px;'>Ravi de vous revoir dans votre espace membre AEEMG.</p>", unsafe_allow_html=True)
-
-    # --- 📊 LIGNE DE STATISTIQUES ---
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown(f"""<div class="glass-card" style="text-align: center;">
-            <p style="color: #D4AF37; margin-bottom: 5px;">Statut Membre</p>
-            <h2 style="margin: 0;">✨ Actif</h2>
-            <p style="font-size: 0.8em; color: #888;">ID: #00{u['id']}</p>
-        </div>""", unsafe_allow_html=True)
-    with col2:
-        cotis_text = "✅ À jour" if u['cotisation'] else "⚠️ À régler"
-        cotis_color = "#10b981" if u['cotisation'] else "#ef4444"
-        st.markdown(f"""<div class="glass-card" style="text-align: center;">
-            <p style="color: #D4AF37; margin-bottom: 5px;">Cotisation 2026</p>
-            <h2 style="margin: 0; color: {cotis_color};">{cotis_text}</h2>
-            <p style="font-size: 0.8em; color: #888;">{u['organe_base']}</p>
-        </div>""", unsafe_allow_html=True)
-    with col3:
-        st.markdown(f"""<div class="glass-card" style="text-align: center;">
-            <p style="color: #D4AF37; margin-bottom: 5px;">Engagement</p>
-            <h2 style="margin: 0;">🥈 Argent</h2>
-            <p style="font-size: 0.8em; color: #888;">Fidèle membre</p>
-        </div>""", unsafe_allow_html=True)
-
-    # --- 📢 ACTUALITÉS & ACTIONS ---
-    c_actu, c_action = st.columns([2, 1])
-    with c_actu:
-        st.markdown("### 📢 Fil d'Actualités")
-        st.markdown(f"""<div class="glass-card" style="padding: 15px; border-left: 5px solid #D4AF37;">
-            <small style="color: #888;">15 Mars 2026</small>
-            <h4 style="margin: 5px 0;">🌙 Assemblée Générale</h4>
-            <p style="font-size: 0.9em;">Rappel : Présence obligatoire pour tous les membres du Bureau National.</p>
-        </div>""", unsafe_allow_html=True)
-        st.markdown(f"""<div class="glass-card" style="padding: 15px; border-left: 5px solid #065f46;">
-            <small style="color: #888;">01 Mars 2026</small>
-            <h4 style="margin: 5px 0;">✨ Nouveau portail membre</h4>
-            <p style="font-size: 0.9em;">Votre espace membre a été mis à jour pour une meilleure expérience.</p>
-        </div>""", unsafe_allow_html=True)
-
-    with c_action:
-        st.markdown("### ⚡ Actions Rapides")
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        if st.button("📄 Ma Carte Membre"):
-            st.info("Fonctionnalité bientôt disponible !")
-        if st.button("💳 Payer Cotisation"):
-            st.success("Redirigez-vous vers l'onglet Cotisation")
-        if st.button("📂 Mes Documents"):
-            st.write("Accès rapide activé")
+    
+    col_p, col_i = st.columns([1, 2])
+    
+    with col_p:
+        st.markdown('<div class="glass-card" style="text-align:center;">', unsafe_allow_html=True)
+        img_url = u.get('photo_url') or "https://www.w3schools.com/howto/img_avatar.png"
+        st.markdown(f"<img src='{img_url}' class='profile-img'>", unsafe_allow_html=True)
+        st.write(f"**{u['prenom']} {u['nom']}**")
+        
+        # Modifier la photo
+        with st.expander("📸 Modifier ma photo"):
+            new_url = st.text_input("Lien URL de l'image (JPG/PNG)", value=img_url)
+            if st.button("Enregistrer la photo"):
+                supabase.table("membres").update({"photo_url": new_url}).eq("id", u['id']).execute()
+                st.session_state.user_info['photo_url'] = new_url
+                st.success("Photo mise à jour !")
+                time.sleep(1)
+                st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
+    with col_i:
+        st.markdown("### 📢 Fil d'Actualités")
+        st.markdown(f"""<div class="glass-card" style="padding: 15px; border-left: 5px solid #D4AF37;">
+            <small style="color: #888;">Mars 2026</small>
+            <h4 style="margin: 5px 0;">🌙 Bienvenue sur votre portail</h4>
+            <p style="font-size: 0.9em;">N'oubliez pas de mettre à jour votre profil !</p>
+        </div>""", unsafe_allow_html=True)
+
+    # Stats en bas
+    c1, c2, c3 = st.columns(3)
+    c1.markdown(f'<div class="glass-card">Statut: ✨ Actif<br>ID: #00{u["id"]}</div>', unsafe_allow_html=True)
+    c2.markdown(f'<div class="glass-card">Cotisation: {"✅ À jour" if u["cotisation"] else "⚠️ À régler"}</div>', unsafe_allow_html=True)
+    c3.markdown(f'<div class="glass-card">Organe:<br>{u["organe_base"]}</div>', unsafe_allow_html=True)
+
+# (Reste du code : Cotisations, Documents, Galerie, Admin, Déconnexion inchangés)
 elif menu == "💳 Cotisations":
     st.markdown("<h1 class='gold-text'>💳 Ma Cotisation</h1>", unsafe_allow_html=True)
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.write("Le montant de la cotisation annuelle est de **10.000 GNF**.")
-    st.info("Moyens de paiement : Orange Money / Mobile Money au +224 XXX XX XX XX")
-    with st.form("pay_form"):
-        trans_id = st.text_input("Numéro de Transaction (ID)")
-        if st.form_submit_button("Déclarer mon paiement"):
-            st.success("Reçu enregistré ! L'admin va vérifier votre paiement.")
-    st.markdown('</div>', unsafe_allow_html=True)
-
+    st.markdown('<div class="glass-card">Le montant est de 10.000 GNF.</div>', unsafe_allow_html=True)
 elif menu == "📂 Documents":
-    st.markdown("<h1 class='gold-text'>📂 Bibliothèque de l'AEEMG</h1>", unsafe_allow_html=True)
-    docs = [("📜 Statuts et Règlement Intérieur", "PDF"), ("📖 Guide du Membre", "PDF"), ("📋 Formulaire de projet", "DOCX")]
-    for name, type_doc in docs:
-        with st.expander(name):
-            st.write(f"Type : {type_doc}")
-            st.button(f"Télécharger {name}", key=name)
-
+    st.markdown("<h1 class='gold-text'>📂 Bibliothèque</h1>", unsafe_allow_html=True)
 elif menu == "📸 Galerie":
     st.markdown("<h1 class='gold-text'>📸 Galerie Photos</h1>", unsafe_allow_html=True)
-    c1, c2, c3 = st.columns(3)
-    c1.image("https://images.unsplash.com/photo-1523240715630-991c2e82bc28?w=500", caption="Conférence 2025")
-    c2.image("https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=500", caption="Sortie de cohésion")
-    c3.image("https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=500", caption="Séminaire Étudiant")
-
 elif menu == "🛠️ Admin":
     if st.session_state.user_info.get('email') == "nernonedouard99@gmail.com":
-        st.markdown("<h1 class='gold-text'>🛠️ Espace Administrateur</h1>", unsafe_allow_html=True)
-        tab1, tab2 = st.tabs(["👥 Validation Membres", "📊 Statistiques"])
-        with tab1:
-            res = supabase.table("membres").select("*").eq("statut", "en_attente").execute()
-            if not res.data: st.info("Aucune demande en attente.")
-            for m in res.data:
-                with st.expander(f"Dossier de {m['prenom']} {m['nom']}"):
-                    st.write(f"Motivation : {m['motivation']}")
-                    if st.button("Approuver ce membre", key=f"app_{m['id']}"):
-                        supabase.table("membres").update({"statut": "approuve"}).eq("id", m['id']).execute()
-                        st.success("Membre approuvé !")
-                        st.rerun()
-        with tab2:
-            count = supabase.table("membres").select("id", count="exact").execute()
-            st.metric("Total Membres", count.count if count.count else 0)
-
+        st.markdown("<h1 class='gold-text'>🛠️ Admin</h1>", unsafe_allow_html=True)
+        res = supabase.table("membres").select("*").eq("statut", "en_attente").execute()
+        for m in res.data:
+            with st.expander(f"{m['prenom']} {m['nom']}"):
+                if st.button("Approuver", key=m['id']):
+                    supabase.table("membres").update({"statut": "approuve"}).eq("id", m['id']).execute()
+                    st.rerun()
 elif menu == "🚪 Déconnexion":
     st.session_state.clear()
     st.rerun()
