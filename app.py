@@ -1,6 +1,6 @@
 import streamlit as st
 from supabase import create_client
-import hashlib  # Importation pour la sécurité
+import hashlib
 
 # 1. Connexion Supabase
 v_url = "https://ryfrekltrgaqyryzozhc.supabase.co"
@@ -205,9 +205,7 @@ elif menu == "🛠️ Admin":
             membres = res_m.data
             
             if membres:
-                # Filtrage dynamique
                 filtered = [m for m in membres if search_query in m['nom'].lower() or search_query in m['prenom'].lower() or search_query in m['email'].lower()]
-                
                 st.write(f"Total membres : **{len(membres)}** | Filtrés : **{len(filtered)}**")
                 
                 for m in filtered:
@@ -217,11 +215,10 @@ elif menu == "🛠️ Admin":
                         st.write(f"**Téléphone :** {m.get('telephone', 'N/A')}")
                         st.write(f"**Statut Cotisation :** {status}")
                         if not m.get('cotisation'):
-                          # REMPLACE CETTE LIGNE :
-if st.button(f"Marquer comme payé", key=f"pay_{m['email']}"):
-
-# PAR CELLE-CI (on ajoute m['id']) :
-if st.button(f"Marquer comme payé", key=f"pay_{m['email']}_{m['id']}"):
+                            if st.button("Marquer comme payé", key=f"pay_{m['email']}_{m['id']}"):
+                                supabase.table("membres").update({"cotisation": True}).eq("email", m['email']).execute()
+                                st.success(f"Statut de {m['prenom']} mis à jour !")
+                                st.rerun()
             else:
                 st.info("Aucun membre inscrit pour le moment.")
         
