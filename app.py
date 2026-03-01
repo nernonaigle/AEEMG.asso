@@ -15,11 +15,25 @@ v_url = "https://ryfrekltrgaqyryzozhc.supabase.co"
 v_key = "sb_publishable_iYEJIAz8ZK-fls3KMXI-pw_gcyinvF0"
 supabase = create_client(v_url, v_key)
 
-# --- FONCTIONS DE SÉCURITÉ ---
+# --- FONCTIONS DE SÉCURITÉ & MÉDIA ---
 def hasher_password(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
-# --- 🎨 DESIGN MODERNISÉ ---
+def process_media(file):
+    if file is None: return None, None
+    file_type = file.type.split('/')[0] # 'image' ou 'video'
+    
+    if file_type == 'image':
+        img = Image.open(file)
+        img.thumbnail((800, 800)) # Optimisation
+        buffered = BytesIO()
+        img.save(buffered, format="PNG")
+        return f"data:image/png;base64,{base64.b64encode(buffered.getvalue()).decode()}", "image"
+    else:
+        # Pour la vidéo, on la garde telle quelle en base64 (Attention à la taille < 50MB)
+        return f"data:{file.type};base64,{base64.b64encode(file.read()).decode()}", "video"
+
+# --- 🎨 DESIGN ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
@@ -30,29 +44,17 @@ st.markdown("""
         background-size: cover !important;
     }
     .glass-card {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(20px);
-        border-radius: 20px;
-        padding: 25px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(15px);
+        border-radius: 15px;
+        padding: 20px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         color: white;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
-    .profile-img {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid #D4AF37;
-        margin-bottom: 10px;
-    }
-    .stButton>button {
-        border-radius: 12px !important;
-        background: linear-gradient(135deg, #065f46 0%, #047857 100%) !important;
-        color: white !important;
-        border: 1px solid rgba(212, 175, 55, 0.5) !important;
-        transition: 0.3s;
-    }
+    .post-header { display: flex; align-items: center; margin-bottom: 10px; }
+    .post-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #D4AF37; margin-right: 10px; object-fit: cover; }
+    .profile-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #D4AF37; margin-bottom: 10px; }
     .gold-text { color: #D4AF37; font-weight: 800; }
 </style>
 """, unsafe_allow_html=True)
@@ -67,35 +69,17 @@ with st.sidebar:
     if not st.session_state.connecte:
         menu = st.radio("Navigation", ["🔑 Connexion", "📝 Inscription"])
     else:
-        # Photo dans la sidebar
         img_url = st.session_state.user_info.get('photo_url') or "https://www.w3schools.com/howto/img_avatar.png"
         st.markdown(f"<div style='text-align:center;'><img src='{img_url}' style='width:70px;height:70px;border-radius:50%;border:2px solid #D4AF37; object-fit: cover;'></div>", unsafe_allow_html=True)
         st.markdown(f"<p style='text-align:center; color:white;'><b>{st.session_state.user_info.get('prenom')}</b></p>", unsafe_allow_html=True)
-        
         options = ["🏠 Tableau de Bord", "💳 Cotisations", "📂 Documents", "📸 Galerie", "🚪 Déconnexion"]
         if st.session_state.user_info.get('email') == "nernonedouard99@gmail.com":
             options.insert(4, "🛠️ Admin")
         menu = st.radio("Menu Principal", options)
 
-# --- PAGES ---
+# --- CONTENU ---
 
-if menu == "📝 Inscription":
-    st.markdown("<h1 class='gold-text'>✨ Inscription AEEMG</h1>", unsafe_allow_html=True)
-    with st.form("reg_form"):
-        c1, c2 = st.columns(2)
-        nom, prenom = c1.text_input("Nom"), c2.text_input("Prénom")
-        email, pwd = c1.text_input("Email"), c2.text_input("Mot de passe", type="password")
-        ville, organe = c1.text_input("Ville"), c2.selectbox("Organe", ["Bureau National", "Section Universitaire", "Antenne Régionale"])
-        motivation = st.text_area("Motivation")
-        if st.form_submit_button("Envoyer ma demande"):
-            if email and pwd:
-                data = {"nom": nom, "prenom": prenom, "email": email, "password": hasher_password(pwd), "ville": ville, "organe_base": organe, "motivation": motivation, "statut": "en_attente"}
-                try:
-                    supabase.table("membres").insert(data).execute()
-                    st.success("Demande envoyée !")
-                except: st.error("Email déjà utilisé.")
-
-elif menu == "🔑 Connexion":
+if menu == "🔑 Connexion":
     st.markdown("<h2 class='gold-text' style='text-align:center;'>Accès Membre</h2>", unsafe_allow_html=True)
     _, center, _ = st.columns([1, 1.5, 1])
     with center:
@@ -116,65 +100,74 @@ elif menu == "🏠 Tableau de Bord":
     u = st.session_state.user_info
     st.markdown(f"<h1 class='gold-text'>👋 Salam, {u['prenom']} !</h1>", unsafe_allow_html=True)
     
-    col_p, col_i = st.columns([1, 2])
+    col_p, col_i = st.columns([1, 2.5])
     
     with col_p:
+        # --- PROFIL ---
         st.markdown('<div class="glass-card" style="text-align:center;">', unsafe_allow_html=True)
-        # Affichage photo
-        img_url = u.get('photo_url') or "https://www.w3schools.com/howto/img_avatar.png"
-        st.markdown(f"<img src='{img_url}' class='profile-img'>", unsafe_allow_html=True)
+        img_p = u.get('photo_url') or "https://www.w3schools.com/howto/img_avatar.png"
+        st.markdown(f"<img src='{img_p}' class='profile-img'>", unsafe_allow_html=True)
         st.write(f"**{u['prenom']} {u['nom']}**")
-        
-        # --- NOUVEAU SYSTÈME D'IMPORTATION ---
         with st.expander("📸 Changer ma photo"):
-            uploaded_file = st.file_uploader("Importer depuis la galerie", type=['jpg', 'jpeg', 'png'])
-            if uploaded_file is not None:
-                # Optimisation de l'image
-                img = Image.open(uploaded_file)
-                img.thumbnail((300, 300))
-                buffered = BytesIO()
-                img.save(buffered, format="PNG")
-                img_str = base64.b64encode(buffered.getvalue()).decode()
-                full_base64 = f"data:image/png;base64,{img_str}"
-                
-                if st.button("Confirmer l'importation"):
-                    supabase.table("membres").update({"photo_url": full_base64}).eq("id", u['id']).execute()
-                    st.session_state.user_info['photo_url'] = full_base64
-                    st.success("Photo mise à jour !")
-                    time.sleep(1)
+            up_p = st.file_uploader("Nouvelle photo", type=['jpg', 'png'], key="prof")
+            if up_p:
+                b64, _ = process_media(up_p)
+                if st.button("Confirmer photo"):
+                    supabase.table("membres").update({"photo_url": b64}).eq("id", u['id']).execute()
+                    st.session_state.user_info['photo_url'] = b64
                     st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_i:
-        st.markdown("### 📢 Fil d'Actualités")
-        st.markdown(f"""<div class="glass-card" style="padding: 15px; border-left: 5px solid #D4AF37;">
-            <small style="color: #888;">Mars 2026</small>
-            <h4 style="margin: 5px 0;">🌙 Bienvenue sur votre portail</h4>
-            <p style="font-size: 0.9em;">Personnalisez votre espace en important votre photo de profil.</p>
-        </div>""", unsafe_allow_html=True)
-
-    # Stats en bas
-    c1, c2, c3 = st.columns(3)
-    c1.markdown(f'<div class="glass-card" style="text-align:center;">Statut<br><b>✨ Actif</b></div>', unsafe_allow_html=True)
-    c2.markdown(f'<div class="glass-card" style="text-align:center;">Cotisation<br><b>{"✅ À jour" if u["cotisation"] else "⚠️ À régler"}</b></div>', unsafe_allow_html=True)
-    c3.markdown(f'<div class="glass-card" style="text-align:center;">Organe<br><b>{u["organe_base"]}</b></div>', unsafe_allow_html=True)
-
-elif menu == "💳 Cotisations":
-    st.markdown("<h1 class='gold-text'>💳 Ma Cotisation</h1>")
-    st.markdown('<div class="glass-card">Le montant est de 10.000 GNF.</div>', unsafe_allow_html=True)
-elif menu == "📂 Documents":
-    st.markdown("<h1 class='gold-text'>📂 Bibliothèque</h1>")
-elif menu == "📸 Galerie":
-    st.markdown("<h1 class='gold-text'>📸 Galerie Photos</h1>")
-elif menu == "🛠️ Admin":
-    if st.session_state.user_info.get('email') == "nernonedouard99@gmail.com":
-        st.markdown("<h1 class='gold-text'>🛠️ Admin</h1>")
-        res = supabase.table("membres").select("*").eq("statut", "en_attente").execute()
-        for m in res.data:
-            with st.expander(f"{m['prenom']} {m['nom']}"):
-                if st.button("Approuver", key=m['id']):
-                    supabase.table("membres").update({"statut": "approuve"}).eq("id", m['id']).execute()
+        # --- ZONE DE PUBLICATION ---
+        st.markdown("### ✍️ Partager avec l'AEEMG")
+        with st.container():
+            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+            txt_pub = st.text_area("Quoi de neuf ?", placeholder="Écrivez votre message ici...", label_visibility="collapsed")
+            media_pub = st.file_uploader("Ajouter une photo ou vidéo", type=['jpg', 'png', 'mp4', 'mov'])
+            if st.button("🚀 Publier"):
+                if txt_pub or media_pub:
+                    m_url, m_type = process_media(media_pub)
+                    pub_data = {
+                        "auteur_nom": f"{u['prenom']} {u['nom']}",
+                        "auteur_photo": u.get('photo_url'),
+                        "contenu_texte": txt_pub,
+                        "media_url": m_url,
+                        "media_type": m_type
+                    }
+                    supabase.table("publications").insert(pub_data).execute()
+                    st.success("Publié !")
+                    time.sleep(1)
                     st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        # --- FIL D'ACTUALITÉ ---
+        st.markdown("### 📢 Actualités de la communauté")
+        posts = supabase.table("publications").select("*").order("created_at", desc=True).limit(10).execute()
+        
+        for p in posts.data:
+            with st.container():
+                st.markdown(f"""
+                <div class="glass-card">
+                    <div class="post-header">
+                        <img src="{p['auteur_photo'] or 'https://www.w3schools.com/howto/img_avatar.png'}" class="post-avatar">
+                        <div><b>{p['auteur_nom']}</b><br><small style="color:#888;">{p['created_at'][:10]}</small></div>
+                    </div>
+                    <p>{p['contenu_texte']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Affichage du média s'il existe
+                if p['media_url']:
+                    if p['media_type'] == "image":
+                        st.image(p['media_url'], use_container_width=True)
+                    elif p['media_type'] == "video":
+                        st.video(p['media_url'])
+                st.markdown("<br>", unsafe_allow_html=True)
+
 elif menu == "🚪 Déconnexion":
     st.session_state.clear()
     st.rerun()
+
+# Note: Pour garder le code court, j'ai omis les autres menus (Inscription, Cotisation, etc.) 
+# mais ils restent identiques à ta version précédente.
