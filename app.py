@@ -31,12 +31,11 @@ with st.sidebar:
         menu = st.radio("Navigation", ["🔑 Connexion", "📝 Inscription"])
     else:
         st.success(f"Bienvenue {st.session_state.user_info['prenom']}")
-        # AJOUT DE LA GALERIE DANS LES OPTIONS
         options = ["🏠 Tableau de Bord", "💳 Cotisations", "📂 Documents", "📸 Galerie", "🚪 Déconnexion"]
         
         # Accès Admin pour ton email
         if st.session_state.user_info['email'] == "nernonedouard99@gmail.com":
-            options.insert(4, "🛠️ Admin") # Placé avant Déconnexion
+            options.insert(4, "🛠️ Admin") 
         
         menu = st.radio("Espace Privé", options)
 
@@ -159,12 +158,10 @@ elif menu == "📂 Documents":
         st.success("📖 Calendrier des prières - Conakry")
         st.download_button("Télécharger le Calendrier", "Contenu PDF", file_name="calendrier_priere.pdf")
 
-# --- NOUVELLE SECTION : GALERIE ---
 elif menu == "📸 Galerie":
     st.markdown("<h1>📸 Vie de l'Association</h1>", unsafe_allow_html=True)
     st.write("Découvrez les moments forts de nos derniers événements.")
     
-    # Photos d'exemple
     photos = [
         {"url": "https://images.unsplash.com/photo-1542810634-71277d95dcbb", "caption": "Conférence AEEMG"},
         {"url": "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16", "caption": "Rupture de Jeûne"},
@@ -176,4 +173,40 @@ elif menu == "📸 Galerie":
     for i, photo in enumerate(photos):
         with cols[i % 2]:
             st.image(photo['url'], caption=photo['caption'], use_container_width=True)
-            st.write("")
+            st.write("") 
+
+elif menu == "🛠️ Admin":
+    if st.session_state.connecte and st.session_state.user_info['email'] == "nernonedouard99@gmail.com":
+        st.title("🛠️ Espace Administration")
+        tab_p, tab_a = st.tabs(["💰 Valider Paiements", "📢 Publier Annonce"])
+        
+        with tab_p:
+            res = supabase.table("paiements").select("*").eq("statut", "en attente").execute()
+            attentes = res.data
+            if not attentes:
+                st.info("Aucun paiement en attente. ✅")
+            else:
+                for p in attentes:
+                    with st.expander(f"Paiement de {p['email']}"):
+                        st.write(f"ID: {p['transaction_id']} | Mode: {p['mode']}")
+                        if st.button(f"Valider {p['email']}", key=p['id']):
+                            supabase.table("paiements").update({"statut": "validé"}).eq("id", p['id']).execute()
+                            supabase.table("membres").update({"cotisation": True}).eq("email", p['email']).execute()
+                            st.success("Validé !")
+                            st.rerun()
+        
+        with tab_a:
+            st.subheader("Diffuser un message")
+            with st.form("publish_ann"):
+                msg = st.text_area("Message aux membres")
+                imp = st.checkbox("Urgent / Important")
+                if st.form_submit_button("Publier l'annonce"):
+                    if msg:
+                        supabase.table("annonces").insert({"message": msg, "important": imp}).execute()
+                        st.success("Annonce publiée !")
+                        st.rerun()
+
+elif menu == "🚪 Déconnexion":
+    st.session_state.connecte = False
+    st.session_state.user_info = None
+    st.rerun()
