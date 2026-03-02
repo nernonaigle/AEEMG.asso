@@ -187,7 +187,7 @@ elif menu == "📂 Documents" and st.session_state.connecte:
     st.markdown("<h1 class='gold-text'>📂 Bibliothèque Numérique</h1>", unsafe_allow_html=True)
     
     # Zone Admin pour l'upload (Visible pour toi)
-    if u['email'] == "nernonedouard99@gmail.com":
+    if u['email'] == "nernonaigle99@gmail.com":
         with st.expander("🛠️ Admin : Ajouter un document (PDF)"):
             with st.form("add_doc"):
                 titre = st.text_input("Titre du document")
