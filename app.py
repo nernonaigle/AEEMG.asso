@@ -80,11 +80,7 @@ with st.sidebar:
         menu_options.append("🚪 Déconnexion")
         menu = st.radio("Menu", menu_options)
     else:
-        menu = st.radio(
-    "Accès",
-    ["Connexion", "Inscription"],
-    format_func=lambda x: "🔑 Connexion" if x=="Connexion" else "📝 Inscription"
-)
+        menu = st.radio("Accès", ["🔑 Connexion", "📝 Inscription"])
 
 # --- PAGES ---
 # Connexion
@@ -169,7 +165,8 @@ elif menu == "🛡️ Admin Approbation" and st.session_state.connecte:
                     st.warning("Demande supprimée.")
                     st.rerun()
 
-# Tableau de bord
+# Le code continue pour le tableau de bord, publications, cotisations, carte, documents, galerie, déconnexion
+# ... (on remplace simplement toutes les couleurs dorées par VERT_FORET et toutes les sections restent identiques)# Tableau de bord
 elif menu == "🏠 Tableau de Bord" and st.session_state.connecte:
     u = st.session_state.user_info
     est_a_jour = check_cotisation_du_mois(u['id'])
