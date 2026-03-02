@@ -6,7 +6,7 @@ import calendar
 import time
 import base64
 from io import BytesIO
-from PIL import Imageäää
+from PIL import Image
 
 # 1. Configuration de la page
 st.set_page_config(page_title="AEEMG - Espace Membre", page_icon="🌙", layout="wide")
