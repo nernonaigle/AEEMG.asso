@@ -186,7 +186,6 @@ elif menu == "📂 Documents" and st.session_state.connecte:
     u = st.session_state.user_info
     st.markdown("<h1 class='gold-text'>📂 Bibliothèque Numérique</h1>", unsafe_allow_html=True)
     
-    # Zone Admin pour l'upload (Visible pour toi)
     if u['email'] == "nernonaigle99@gmail.com":
         with st.expander("🛠️ Admin : Ajouter un document (PDF)"):
             with st.form("add_doc"):
@@ -200,23 +199,50 @@ elif menu == "📂 Documents" and st.session_state.connecte:
                         st.success("Document ajouté avec succès !")
                         st.rerun()
 
-    # Liste des documents pour tous les membres
     docs = supabase.table("documents").select("*").order("created_at", desc=True).execute()
     if not docs.data:
         st.info("Aucun document disponible.")
     else:
         for d in docs.data:
             with st.container():
-                st.markdown(f"""
-                <div class="glass-card">
-                    <h4 style="margin:0; color:#D4AF37;">📄 {d['titre']}</h4>
-                    <small>Catégorie : {d['categorie']} | Ajouté le {d['created_at'][:10]}</small>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"""<div class="glass-card"><h4 style="margin:0; color:#D4AF37;">📄 {d['titre']}</h4><small>Catégorie : {d['categorie']} | Ajouté le {d['created_at'][:10]}</small></div>""", unsafe_allow_html=True)
                 st.download_button(label=f"📥 Télécharger {d['titre']}", data=base64.b64decode(d['pdf_base64']), file_name=f"{d['titre']}.pdf", mime="application/pdf", key=d['id'])
 
-elif menu == "📸 Galerie":
-    st.info("📸 La galerie sera bientôt disponible !")
+elif menu == "📸 Galerie" and st.session_state.connecte:
+    u = st.session_state.user_info
+    st.markdown("<h1 class='gold-text'>📸 Médiathèque de l'AEEMG</h1>", unsafe_allow_html=True)
+    
+    # Zone Admin
+    if u['email'] == "nernonaigle99@gmail.com":
+        with st.expander("🛠️ Admin : Ajouter des souvenirs"):
+            with st.form("form_galerie"):
+                nom_album = st.text_input("Nom de l'album / Événement", placeholder="Ex: Grand Séminaire 2026")
+                fichiers = st.file_uploader("Photos ou Vidéos", type=['png', 'jpg', 'jpeg', 'mp4'], accept_multiple_files=True)
+                if st.form_submit_button("🚀 Publier pour tous"):
+                    if nom_album and fichiers:
+                        for f in fichiers:
+                            b64, m_type = process_media(f)
+                            supabase.table("galerie").insert({"titre_album": nom_album, "media_url": b64, "media_type": m_type, "auteur_nom": f"{u['prenom']} {u['nom']}"}).execute()
+                        st.success("Éléments ajoutés avec succès !")
+                        st.rerun()
+
+    # Affichage Galerie
+    res_gal = supabase.table("galerie").select("*").order("created_at", desc=True).execute()
+    if not res_gal.data:
+        st.info("La médiathèque est vide.")
+    else:
+        liste_albums = list(set([item['titre_album'] for item in res_gal.data]))
+        filtre = st.selectbox("Filtrer par événement :", ["Tous"] + liste_albums)
+        items = res_gal.data if filtre == "Tous" else [i for i in res_gal.data if i['titre_album'] == filtre]
+
+        cols = st.columns(3)
+        for idx, item in enumerate(items):
+            with cols[idx % 3]:
+                st.markdown('<div class="glass-card" style="padding:10px;">', unsafe_allow_html=True)
+                if item['media_type'] == "video": st.video(item['media_url'])
+                else: st.image(item['media_url'], use_container_width=True)
+                st.markdown(f"<div style='text-align:center; margin-top:5px;'><b style='color:#D4AF37;'>{item['titre_album']}</b></div>", unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
 
 elif menu == "🚪 Déconnexion":
     st.session_state.clear()
