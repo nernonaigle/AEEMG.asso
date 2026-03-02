@@ -80,7 +80,23 @@ with st.sidebar:
         menu_options.append("🚪 Déconnexion")
         menu = st.radio("Menu", menu_options)
     else:
-        menu = st.radio("Accès", ["🔑 Connexion", "📝 Inscription"])
+        col1, col2 = st.columns(2)
+menu = None
+with col1:
+    if st.button("🔑 Connexion"):
+        menu = "Connexion"
+with col2:
+    if st.button("📝 Inscription"):
+        menu = "Inscription"
+
+# Garde la dernière sélection en mémoire
+if "menu_state" not in st.session_state:
+    st.session_state.menu_state = "Connexion"
+
+if menu:
+    st.session_state.menu_state = menu
+
+menu = st.session_state.menu_state
 
 # --- PAGES ---
 # Connexion
