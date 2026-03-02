@@ -80,7 +80,11 @@ with st.sidebar:
         menu_options.append("🚪 Déconnexion")
         menu = st.radio("Menu", menu_options)
     else:
-        menu = st.radio("Accès", ["🔑 Connexion", "📝 Inscription"])
+        menu = st.radio(
+    "Accès",
+    ["Connexion", "Inscription"],
+    format_func=lambda x: "🔑 Connexion" if x=="Connexion" else "📝 Inscription"
+)
 
 # --- PAGES ---
 # Connexion
