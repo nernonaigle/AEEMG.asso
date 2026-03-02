@@ -133,24 +133,7 @@ elif menu == "📝 Inscription":
     _, col, _ = st.columns([1, 2, 1])
     with col:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        with st.form("inscription_form"):
-            nom = st.text_input("Nom")
-            prenom = st.text_input("Prénom")
-            email = st.text_input("Email")
-            password = st.text_input("Mot de passe", type="password")
-            organe = st.selectbox("Organe de base", ["Bureau National", "Section Universitaire", "Antenne Régionale"])
-            if st.form_submit_button("Envoyer ma demande"):
-                if nom and prenom and email and password:
-                    data = {"nom": nom, "prenom": prenom, "email": email, "password": hasher_password(password), "organe_base": organe, "statut": "en_attente"}
-                    try:
-                        supabase.table("membres").insert(data).execute()
-                        st.success("✅ Demande envoyée ! Attendez la validation d'un administrateur.")
-                    except Exception as e:
-                        st.error("Erreur d'inscription. Vérifiez les politiques RLS de Supabase.")
-                        st.expander("Voir l'erreur technique").code(str(e))
-                else:
-                    st.error("Veuillez remplir tous les champs.")
-        st.markdown('</div>', unsafe_allow_html=True)
+
 
 elif menu == "🛡️ Admin Approbation" and st.session_state.connecte:
     st.markdown("<h1 class='gold-text'>🛡️ Validation des Membres</h1>", unsafe_allow_html=True)
