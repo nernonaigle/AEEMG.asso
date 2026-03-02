@@ -182,6 +182,42 @@ elif menu == "💳 Cotisations" and st.session_state.connecte:
         for h in hist.data:
             st.write(f"📅 {h['date_paiement'][:10]} - {h['statut'].upper()}")
 
+elif menu == "📂 Documents" and st.session_state.connecte:
+    u = st.session_state.user_info
+    st.markdown("<h1 class='gold-text'>📂 Bibliothèque Numérique</h1>", unsafe_allow_html=True)
+    
+    # Zone Admin pour l'upload (Visible pour toi)
+    if u['email'] == "nernonedouard99@gmail.com":
+        with st.expander("🛠️ Admin : Ajouter un document (PDF)"):
+            with st.form("add_doc"):
+                titre = st.text_input("Titre du document")
+                cat = st.selectbox("Catégorie", ["Statuts", "Règlement", "PV de Réunion", "Formation"])
+                f_doc = st.file_uploader("Fichier PDF", type=['pdf'])
+                if st.form_submit_button("Mettre en ligne"):
+                    if titre and f_doc:
+                        b64_pdf = base64.b64encode(f_doc.read()).decode()
+                        supabase.table("documents").insert({"titre": titre, "categorie": cat, "pdf_base64": b64_pdf}).execute()
+                        st.success("Document ajouté avec succès !")
+                        st.rerun()
+
+    # Liste des documents pour tous les membres
+    docs = supabase.table("documents").select("*").order("created_at", desc=True).execute()
+    if not docs.data:
+        st.info("Aucun document disponible.")
+    else:
+        for d in docs.data:
+            with st.container():
+                st.markdown(f"""
+                <div class="glass-card">
+                    <h4 style="margin:0; color:#D4AF37;">📄 {d['titre']}</h4>
+                    <small>Catégorie : {d['categorie']} | Ajouté le {d['created_at'][:10]}</small>
+                </div>
+                """, unsafe_allow_html=True)
+                st.download_button(label=f"📥 Télécharger {d['titre']}", data=base64.b64decode(d['pdf_base64']), file_name=f"{d['titre']}.pdf", mime="application/pdf", key=d['id'])
+
+elif menu == "📸 Galerie":
+    st.info("📸 La galerie sera bientôt disponible !")
+
 elif menu == "🚪 Déconnexion":
     st.session_state.clear()
     st.rerun()
