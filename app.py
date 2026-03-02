@@ -128,11 +128,6 @@ if menu == "🔑 Connexion":
                 st.error("Identifiants incorrects.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-elif menu == "📝 Inscription":
-    st.markdown("<h2 class='gold-text' style='text-align:center;'>Créer un compte</h2>", unsafe_allow_html=True)
-    _, col, _ = st.columns([1, 2, 1])
-    with col:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 
 
 elif menu == "🛡️ Admin Approbation" and st.session_state.connecte:
