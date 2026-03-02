@@ -116,7 +116,7 @@ elif menu == "📝 Inscription":
             password = st.text_input("Mot de passe", type="password")
             ville = st.text_input("Ville")
             motivation = st.text_area("Motivation (Pourquoi rejoindre l’AEEMG ?)")
-            organe = st.selectbox("Organe de base", ["Bureau National","Section Universitaire","Antenne Régionale"])
+            organe = st.selectbox("Organe", ["Bureau National","Section Universitaire","Antenne Régionale","section scolaire","section communale"])
             submitted = st.form_submit_button("Envoyer ma demande")
             if submitted:
                 if nom and prenom and email and password and ville and motivation:
