@@ -66,7 +66,6 @@ st.markdown("""
     .badge-paye { background: #10b981; color: white; padding: 3px 10px; border-radius: 10px; font-size: 0.8em; }
     .badge-impaye { background: #ef4444; color: white; padding: 3px 10px; border-radius: 10px; font-size: 0.8em; }
     
-    /* Carte de Membre */
     .member-card {
         background: linear-gradient(145deg, #022c22 0%, #059669 100%);
         border: 2px solid #D4AF37;
@@ -148,6 +147,7 @@ elif menu == "🏠 Tableau de Bord" and st.session_state.connecte:
     est_a_jour = check_cotisation_du_mois(u['id'])
     st.markdown(f"<h1 class='gold-text'>👋 Salam, {u['prenom']} !</h1>", unsafe_allow_html=True)
     col_left, col_right = st.columns([1, 2.2])
+    
     with col_left:
         st.markdown('<div class="glass-card" style="text-align:center;">', unsafe_allow_html=True)
         st.markdown(f"<img src='{u.get('photo_url') or 'https://www.w3schools.com/howto/img_avatar.png'}' class='profile-img'>", unsafe_allow_html=True)
@@ -167,7 +167,6 @@ elif menu == "🏠 Tableau de Bord" and st.session_state.connecte:
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # --- FIL D'ACTUALITÉ AVEC LIKES ET COMMENTAIRES ---
         posts = supabase.table("publications").select("*").order("created_at", desc=True).limit(10).execute()
         for p in posts.data:
             with st.container():
@@ -176,19 +175,19 @@ elif menu == "🏠 Tableau de Bord" and st.session_state.connecte:
                     if p['media_type']=="image": st.image(p['media_url'])
                     else: st.video(p['media_url'])
                 
-                # Zone Interactive
-                c_lk, c_cm = st.columns([1, 5])
-                likes_res = supabase.table("likes").select("*", count="exact").eq("post_id", p['id']).execute()
-                nb_likes = likes_res.count if likes_res.count else 0
+                # --- SYSTÈME DE LIKES CORRIGÉ ---
+                likes_res = supabase.table("likes").select("id").eq("post_id", p['id']).execute()
+                nb_likes = len(likes_res.data) if likes_res.data else 0
                 
+                c_lk, c_cm = st.columns([1, 5])
                 with c_lk:
                     if st.button(f"❤️ {nb_likes}", key=f"lk_{p['id']}"):
-                        try:
-                            supabase.table("likes").insert({"post_id": p['id'], "user_id": u['id']}).execute()
-                            st.rerun()
-                        except:
+                        check = supabase.table("likes").select("*").eq("post_id", p['id']).eq("user_id", u['id']).execute()
+                        if check.data:
                             supabase.table("likes").delete().eq("post_id", p['id']).eq("user_id", u['id']).execute()
-                            st.rerun()
+                        else:
+                            supabase.table("likes").insert({"post_id": p['id'], "user_id": u['id']}).execute()
+                        st.rerun()
                 
                 with c_cm:
                     with st.expander("💬 Commentaires"):
