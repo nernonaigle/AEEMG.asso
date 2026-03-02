@@ -65,6 +65,19 @@ st.markdown("""
     .gold-text { color: #D4AF37; font-weight: 800; }
     .badge-paye { background: #10b981; color: white; padding: 3px 10px; border-radius: 10px; font-size: 0.8em; }
     .badge-impaye { background: #ef4444; color: white; padding: 3px 10px; border-radius: 10px; font-size: 0.8em; }
+    
+    /* Carte de Membre */
+    .member-card {
+        background: linear-gradient(145deg, #022c22 0%, #059669 100%);
+        border: 2px solid #D4AF37;
+        border-radius: 20px;
+        padding: 25px;
+        max-width: 350px;
+        margin: 20px auto;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .card-photo { width: 120px; height: 120px; border-radius: 50%; border: 3px solid #D4AF37; object-fit: cover; margin-bottom: 15px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -83,7 +96,7 @@ with st.sidebar:
         st.markdown(f"<p style='text-align:center; color:white; margin-bottom:0;'><b>{u['prenom']}</b></p>", unsafe_allow_html=True)
         status_html = "<span class='badge-paye'>✅ À JOUR</span>" if est_a_jour else "<span class='badge-impaye'>⚠️ À RÉGLER</span>"
         st.markdown(f"<div style='text-align:center;'>{status_html}</div>", unsafe_allow_html=True)
-        menu = st.radio("Menu", ["🏠 Tableau de Bord", "💳 Cotisations", "📂 Documents", "📸 Galerie", "🚪 Déconnexion"])
+        menu = st.radio("Menu", ["🏠 Tableau de Bord", "💳 Cotisations", "🪪 Carte de Membre", "📂 Documents", "📸 Galerie", "🚪 Déconnexion"])
     else:
         menu = st.radio("Accès", ["🔑 Connexion", "📝 Inscription"])
 
@@ -153,12 +166,42 @@ elif menu == "🏠 Tableau de Bord" and st.session_state.connecte:
                 supabase.table("publications").insert({"auteur_nom": f"{u['prenom']} {u['nom']}", "auteur_photo": u.get('photo_url'), "contenu_texte": txt, "media_url": m_url, "media_type": m_type}).execute()
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
-        posts = supabase.table("publications").select("*").order("created_at", desc=True).limit(5).execute()
+
+        # --- FIL D'ACTUALITÉ AVEC LIKES ET COMMENTAIRES ---
+        posts = supabase.table("publications").select("*").order("created_at", desc=True).limit(10).execute()
         for p in posts.data:
-            st.markdown(f"""<div class="glass-card"><img src="{p['auteur_photo'] or 'https://www.w3schools.com/howto/img_avatar.png'}" style="width:35px;height:35px;border-radius:50%; vertical-align:middle; margin-right:10px;"><b>{p['auteur_nom']}</b> <small style="color:#888;">• {p['created_at'][:10]}</small><br><br>{p['contenu_texte']}</div>""", unsafe_allow_html=True)
-            if p['media_url']:
-                if p['media_type']=="image": st.image(p['media_url'])
-                else: st.video(p['media_url'])
+            with st.container():
+                st.markdown(f"""<div class="glass-card"><img src="{p['auteur_photo'] or 'https://www.w3schools.com/howto/img_avatar.png'}" style="width:35px;height:35px;border-radius:50%; vertical-align:middle; margin-right:10px;"><b>{p['auteur_nom']}</b> <small style="color:#888;">• {p['created_at'][:10]}</small><br><br>{p['contenu_texte']}</div>""", unsafe_allow_html=True)
+                if p['media_url']:
+                    if p['media_type']=="image": st.image(p['media_url'])
+                    else: st.video(p['media_url'])
+                
+                # Zone Interactive
+                c_lk, c_cm = st.columns([1, 5])
+                likes_res = supabase.table("likes").select("*", count="exact").eq("post_id", p['id']).execute()
+                nb_likes = likes_res.count if likes_res.count else 0
+                
+                with c_lk:
+                    if st.button(f"❤️ {nb_likes}", key=f"lk_{p['id']}"):
+                        try:
+                            supabase.table("likes").insert({"post_id": p['id'], "user_id": u['id']}).execute()
+                            st.rerun()
+                        except:
+                            supabase.table("likes").delete().eq("post_id", p['id']).eq("user_id", u['id']).execute()
+                            st.rerun()
+                
+                with c_cm:
+                    with st.expander("💬 Commentaires"):
+                        with st.form(key=f"f_cm_{p['id']}", clear_on_submit=True):
+                            c_in = st.text_input("Ajouter un commentaire...", label_visibility="collapsed")
+                            if st.form_submit_button("Envoyer"):
+                                if c_in:
+                                    supabase.table("commentaires").insert({"post_id": p['id'], "auteur_nom": f"{u['prenom']} {u['nom']}", "contenu": c_in}).execute()
+                                    st.rerun()
+                        comms = supabase.table("commentaires").select("*").eq("post_id", p['id']).order("created_at", desc=True).execute()
+                        for c in comms.data:
+                            st.markdown(f"<small><b>{c['auteur_nom']}</b>: {c['contenu']}</small>", unsafe_allow_html=True)
+                st.markdown("---")
 
 elif menu == "💳 Cotisations" and st.session_state.connecte:
     u = st.session_state.user_info
@@ -182,10 +225,28 @@ elif menu == "💳 Cotisations" and st.session_state.connecte:
         for h in hist.data:
             st.write(f"📅 {h['date_paiement'][:10]} - {h['statut'].upper()}")
 
+elif menu == "🪪 Carte de Membre" and st.session_state.connecte:
+    u = st.session_state.user_info
+    est_a_jour = check_cotisation_du_mois(u['id'])
+    st.markdown("<h1 class='gold-text'>🪪 Carte de Membre Digitale</h1>", unsafe_allow_html=True)
+    status_label = "MEMBRE ACTIF" if est_a_jour else "NON À JOUR"
+    status_color = "#10b981" if est_a_jour else "#ef4444"
+    photo = u.get('photo_url') or "https://www.w3schools.com/howto/img_avatar.png"
+    st.markdown(f"""
+    <div class="member-card">
+        <div style="color: #D4AF37; font-weight: 800; margin-bottom: 15px;">AEEMG GUINÉE</div>
+        <img src="{photo}" class="card-photo">
+        <div style="font-size: 1.4em; font-weight: 700; color: white;">{u['prenom'].upper()} {u['nom'].upper()}</div>
+        <div style="color: #D4AF37; font-size: 0.8em; margin-bottom: 15px;">ID: #AE-{u['id']} | {u['organe_base']}</div>
+        <div style="background: {status_color}; color: white; padding: 5px 15px; border-radius: 20px; display: inline-block; font-size: 0.8em; font-weight: bold;">
+            {status_label}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 elif menu == "📂 Documents" and st.session_state.connecte:
     u = st.session_state.user_info
     st.markdown("<h1 class='gold-text'>📂 Bibliothèque Numérique</h1>", unsafe_allow_html=True)
-    
     if u['email'] == "nernonaigle99@gmail.com":
         with st.expander("🛠️ Admin : Ajouter un document (PDF)"):
             with st.form("add_doc"):
@@ -196,53 +257,32 @@ elif menu == "📂 Documents" and st.session_state.connecte:
                     if titre and f_doc:
                         b64_pdf = base64.b64encode(f_doc.read()).decode()
                         supabase.table("documents").insert({"titre": titre, "categorie": cat, "pdf_base64": b64_pdf}).execute()
-                        st.success("Document ajouté avec succès !")
-                        st.rerun()
-
+                        st.success("Document ajouté !") ; st.rerun()
     docs = supabase.table("documents").select("*").order("created_at", desc=True).execute()
-    if not docs.data:
-        st.info("Aucun document disponible.")
-    else:
-        for d in docs.data:
-            with st.container():
-                st.markdown(f"""<div class="glass-card"><h4 style="margin:0; color:#D4AF37;">📄 {d['titre']}</h4><small>Catégorie : {d['categorie']} | Ajouté le {d['created_at'][:10]}</small></div>""", unsafe_allow_html=True)
-                st.download_button(label=f"📥 Télécharger {d['titre']}", data=base64.b64decode(d['pdf_base64']), file_name=f"{d['titre']}.pdf", mime="application/pdf", key=d['id'])
+    for d in docs.data:
+        st.markdown(f"""<div class="glass-card"><b>📄 {d['titre']}</b> ({d['categorie']})</div>""", unsafe_allow_html=True)
+        st.download_button(label=f"📥 Télécharger", data=base64.b64decode(d['pdf_base64']), file_name=f"{d['titre']}.pdf", mime="application/pdf", key=d['id'])
 
 elif menu == "📸 Galerie" and st.session_state.connecte:
     u = st.session_state.user_info
-    st.markdown("<h1 class='gold-text'>📸 Médiathèque de l'AEEMG</h1>", unsafe_allow_html=True)
-    
-    # Zone Admin
+    st.markdown("<h1 class='gold-text'>📸 Médiathèque</h1>", unsafe_allow_html=True)
     if u['email'] == "nernonaigle99@gmail.com":
         with st.expander("🛠️ Admin : Ajouter des souvenirs"):
             with st.form("form_galerie"):
-                nom_album = st.text_input("Nom de l'album / Événement", placeholder="Ex: Grand Séminaire 2026")
-                fichiers = st.file_uploader("Photos ou Vidéos", type=['png', 'jpg', 'jpeg', 'mp4'], accept_multiple_files=True)
-                if st.form_submit_button("🚀 Publier pour tous"):
-                    if nom_album and fichiers:
-                        for f in fichiers:
-                            b64, m_type = process_media(f)
-                            supabase.table("galerie").insert({"titre_album": nom_album, "media_url": b64, "media_type": m_type, "auteur_nom": f"{u['prenom']} {u['nom']}"}).execute()
-                        st.success("Éléments ajoutés avec succès !")
-                        st.rerun()
-
-    # Affichage Galerie
+                nom_album = st.text_input("Nom de l'album")
+                fichiers = st.file_uploader("Photos/Vidéos", type=['png','jpg','mp4'], accept_multiple_files=True)
+                if st.form_submit_button("🚀 Publier"):
+                    for f in fichiers:
+                        b64, m_type = process_media(f)
+                        supabase.table("galerie").insert({"titre_album": nom_album, "media_url": b64, "media_type": m_type, "auteur_nom": u['prenom']}).execute()
+                    st.success("Ajouté !") ; st.rerun()
     res_gal = supabase.table("galerie").select("*").order("created_at", desc=True).execute()
-    if not res_gal.data:
-        st.info("La médiathèque est vide.")
-    else:
-        liste_albums = list(set([item['titre_album'] for item in res_gal.data]))
-        filtre = st.selectbox("Filtrer par événement :", ["Tous"] + liste_albums)
-        items = res_gal.data if filtre == "Tous" else [i for i in res_gal.data if i['titre_album'] == filtre]
-
-        cols = st.columns(3)
-        for idx, item in enumerate(items):
-            with cols[idx % 3]:
-                st.markdown('<div class="glass-card" style="padding:10px;">', unsafe_allow_html=True)
-                if item['media_type'] == "video": st.video(item['media_url'])
-                else: st.image(item['media_url'], use_container_width=True)
-                st.markdown(f"<div style='text-align:center; margin-top:5px;'><b style='color:#D4AF37;'>{item['titre_album']}</b></div>", unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
+    cols = st.columns(3)
+    for idx, item in enumerate(res_gal.data):
+        with cols[idx % 3]:
+            if item['media_type'] == "video": st.video(item['media_url'])
+            else: st.image(item['media_url'])
+            st.caption(item['titre_album'])
 
 elif menu == "🚪 Déconnexion":
     st.session_state.clear()
