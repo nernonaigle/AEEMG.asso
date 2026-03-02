@@ -65,7 +65,6 @@ st.markdown("""
     .gold-text { color: #D4AF37; font-weight: 800; }
     .badge-paye { background: #10b981; color: white; padding: 3px 10px; border-radius: 10px; font-size: 0.8em; }
     .badge-impaye { background: #ef4444; color: white; padding: 3px 10px; border-radius: 10px; font-size: 0.8em; }
-    
     .member-card {
         background: linear-gradient(145deg, #022c22 0%, #059669 100%);
         border: 2px solid #D4AF37;
@@ -95,7 +94,14 @@ with st.sidebar:
         st.markdown(f"<p style='text-align:center; color:white; margin-bottom:0;'><b>{u['prenom']}</b></p>", unsafe_allow_html=True)
         status_html = "<span class='badge-paye'>✅ À JOUR</span>" if est_a_jour else "<span class='badge-impaye'>⚠️ À RÉGLER</span>"
         st.markdown(f"<div style='text-align:center;'>{status_html}</div>", unsafe_allow_html=True)
-        menu = st.radio("Menu", ["🏠 Tableau de Bord", "💳 Cotisations", "🪪 Carte de Membre", "📂 Documents", "📸 Galerie", "🚪 Déconnexion"])
+        
+        # Liste du menu
+        menu_options = ["🏠 Tableau de Bord", "💳 Cotisations", "🪪 Carte de Membre", "📂 Documents", "📸 Galerie"]
+        if u['email'] == "nernonaigle99@gmail.com":
+            menu_options.append("🛡️ Admin Approbation")
+        menu_options.append("🚪 Déconnexion")
+        
+        menu = st.radio("Menu", menu_options)
     else:
         menu = st.radio("Accès", ["🔑 Connexion", "📝 Inscription"])
 
@@ -136,11 +142,35 @@ elif menu == "📝 Inscription":
             if st.form_submit_button("Envoyer ma demande"):
                 if nom and prenom and email and password:
                     data = {"nom": nom, "prenom": prenom, "email": email, "password": hasher_password(password), "organe_base": organe, "statut": "en_attente"}
-                    supabase.table("membres").insert(data).execute()
-                    st.success("✅ Demande envoyée ! Attendez la validation d'un administrateur.")
+                    try:
+                        supabase.table("membres").insert(data).execute()
+                        st.success("✅ Demande envoyée ! Attendez la validation d'un administrateur.")
+                    except Exception as e:
+                        st.error("Erreur d'inscription. Vérifiez les politiques RLS de Supabase.")
+                        st.expander("Voir l'erreur technique").code(str(e))
                 else:
                     st.error("Veuillez remplir tous les champs.")
         st.markdown('</div>', unsafe_allow_html=True)
+
+elif menu == "🛡️ Admin Approbation" and st.session_state.connecte:
+    st.markdown("<h1 class='gold-text'>🛡️ Validation des Membres</h1>", unsafe_allow_html=True)
+    res = supabase.table("membres").select("*").eq("statut", "en_attente").execute()
+    if not res.data:
+        st.info("Aucune demande en attente actuellement.")
+    else:
+        for m in res.data:
+            with st.expander(f"Demande de : {m['prenom']} {m['nom']}"):
+                st.write(f"📧 Email : {m['email']}")
+                st.write(f"🏢 Organe : {m['organe_base']}")
+                c1, c2 = st.columns(2)
+                if c1.button("✅ Approuver", key=f"app_{m['id']}"):
+                    supabase.table("membres").update({"statut": "approuve"}).eq("id", m['id']).execute()
+                    st.success(f"Membre {m['prenom']} approuvé !")
+                    st.rerun()
+                if c2.button("❌ Rejeter", key=f"rej_{m['id']}"):
+                    supabase.table("membres").delete().eq("id", m['id']).execute()
+                    st.warning("Demande supprimée.")
+                    st.rerun()
 
 elif menu == "🏠 Tableau de Bord" and st.session_state.connecte:
     u = st.session_state.user_info
@@ -175,7 +205,6 @@ elif menu == "🏠 Tableau de Bord" and st.session_state.connecte:
                     if p['media_type']=="image": st.image(p['media_url'])
                     else: st.video(p['media_url'])
                 
-                # --- SYSTÈME DE LIKES CORRIGÉ ---
                 likes_res = supabase.table("likes").select("id").eq("post_id", p['id']).execute()
                 nb_likes = len(likes_res.data) if likes_res.data else 0
                 
@@ -202,6 +231,7 @@ elif menu == "🏠 Tableau de Bord" and st.session_state.connecte:
                             st.markdown(f"<small><b>{c['auteur_nom']}</b>: {c['contenu']}</small>", unsafe_allow_html=True)
                 st.markdown("---")
 
+# Les autres sections (Cotisations, Carte, etc.) restent identiques...
 elif menu == "💳 Cotisations" and st.session_state.connecte:
     u = st.session_state.user_info
     st.markdown(f"<h1 class='gold-text'>💳 Cotisation de {datetime.now().strftime('%B %Y')}</h1>", unsafe_allow_html=True)
