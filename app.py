@@ -39,27 +39,8 @@ def check_cotisation_du_mois(user_id) -> bool:
         return len(res.data) > 0
     except Exception: return False
 
-def process_media(file, is_profile=False):
-    if file is None: return None, None
-    try:
-        file_type = file.type.split("/")[0]
-        if file_type == "image":
-            img = Image.open(file)
-            size = (300, 300) if is_profile else (800, 800)
-            img.thumbnail(size)
-            buffer = BytesIO()
-            img.save(buffer, format="PNG")
-            encoded = base64.b64encode(buffer.getvalue()).decode()
-            return f"data:image/png;base64,{encoded}", "image"
-        else:
-            encoded = base64.b64encode(file.read()).decode()
-            return f"data:{file.type};base64,{encoded}", "video"
-    except Exception as e:
-        st.error(f"Erreur média : {e}")
-        return None, None
-
 # =========================================================
-# DESIGN / CSS OPTIMISÉ (LISIBILITÉ & LARGEUR)
+# DESIGN / CSS OPTIMISÉ (SIDEBAR CLAIRE & LISIBILITÉ)
 # =========================================================
 st.markdown("""
 <style>
@@ -81,16 +62,30 @@ html, body, [class*="st-"] {
     background-size: cover !important;
 }
 
-/* --- THEME DES COLONNES DE SAISIE (LISIBILITÉ MAX) --- */
-.stTextInput input, .stTextArea textarea, [data-baseweb="select"] {
+/* --- SIDEBAR CLAIRE (LUMINEUSE) --- */
+[data-testid="stSidebar"] {
     background-color: #ffffff !important; /* Fond blanc pur */
-    color: #000000 !important; /* Texte noir profond */
+    border-right: 1px solid #e2e8f0;
+}
+
+/* Texte du menu radio dans la sidebar */
+[data-testid="stSidebar"] .st-emotion-cache-1647it7, 
+[data-testid="stSidebar"] p, 
+[data-testid="stSidebar"] span {
+    color: #0f172a !important;
     font-weight: 600 !important;
-    border: 2px solid #cbd5e1 !important; /* Bordure plus visible */
+}
+
+/* --- CHAMPS DE SAISIE (LISIBILITÉ MAX) --- */
+.stTextInput input, .stTextArea textarea, [data-baseweb="select"] {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-weight: 600 !important;
+    border: 2px solid #cbd5e1 !important;
     border-radius: 12px !important;
 }
 
-/* Correction spécifique pour le texte dans la Selectbox */
+/* Correction texte Selectbox */
 div[data-baseweb="select"] > div {
     color: #000000 !important;
 }
@@ -102,12 +97,11 @@ label p {
 }
 
 .glass-card {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(15px);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
     padding: 30px;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
 }
 
 .gold-text {
@@ -134,12 +128,13 @@ if "connecte" not in st.session_state: st.session_state.connecte = False
 if "user_info" not in st.session_state: st.session_state.user_info = None
 
 # =========================================================
-# SIDEBAR
+# SIDEBAR (CONTENU)
 # =========================================================
 with st.sidebar:
-    st.markdown("<h1 style='text-align:center; color:#064e3b; font-size: 1.8rem;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align:center; color:#064e3b; font-size: 1.8rem; margin-bottom: 20px;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
     if st.session_state.connecte:
         u = st.session_state.user_info
+        st.markdown(f"<p style='text-align:center;'>Bienvenue,<br><b>{u['prenom']}</b></p>", unsafe_allow_html=True)
         st.write("---")
         menu = st.radio("Navigation", ["🏠 Tableau de Bord", "💳 Cotisations", "🪪 Carte de Membre", "📂 Documents", "🚪 Déconnexion"])
     else:
@@ -174,9 +169,9 @@ elif menu == "📝 Inscription":
         with st.form("inscription", clear_on_submit=False):
             st.markdown("<h4 style='color: #064e3b;'>👤 Identité & Localisation</h4>", unsafe_allow_html=True)
             c1, c2 = st.columns(2)
-            nom = c1.text_input("Nom de famille", placeholder="ex: CAMARA")
-            prenom = c2.text_input("Prénom", placeholder="ex: Mamadou")
-            ville = c1.text_input("Ville de résidence", placeholder="ex: Conakry")
+            nom = c1.text_input("Nom de famille")
+            prenom = c2.text_input("Prénom")
+            ville = c1.text_input("Ville de résidence")
             
             organe_de_base = c2.selectbox(
                 "Organe de base",
@@ -186,7 +181,7 @@ elif menu == "📝 Inscription":
             )
             
             st.markdown("<br><h4 style='color: #064e3b;'>🔐 Sécurité</h4>", unsafe_allow_html=True)
-            email = st.text_input("Email", placeholder="votre@email.com")
+            email = st.text_input("Email")
             p1, p2 = st.columns(2)
             password = p1.text_input("Mot de passe", type="password")
             confirm = p2.text_input("Confirmer le mot de passe", type="password")
@@ -194,8 +189,6 @@ elif menu == "📝 Inscription":
             st.markdown("<br><h4 style='color: #064e3b;'>📝 Motivation</h4>", unsafe_allow_html=True)
             motivation = st.text_area("Pourquoi souhaitez-vous nous rejoindre ?")
             
-            # --- Partie Photo supprimée ici ---
-
             if st.form_submit_button("🚀 ENVOYER MON DOSSIER"):
                 if not all([nom, prenom, email, password, ville, organe_de_base, motivation]):
                     st.error("⚠️ Tous les champs sont obligatoires.")
@@ -216,7 +209,7 @@ elif menu == "📝 Inscription":
                         try:
                             supabase.table("membres").insert(data).execute()
                             st.balloons()
-                            st.success("🎉 Dossier envoyé avec succès !")
+                            st.success("🎉 Dossier envoyé ! Votre compte est en attente de validation.")
                         except Exception as e:
                             st.error(f"Erreur : {e}")
         st.markdown("</div>", unsafe_allow_html=True)
@@ -224,7 +217,6 @@ elif menu == "📝 Inscription":
 elif st.session_state.connecte:
     u = st.session_state.user_info
     if menu == "🏠 Tableau de Bord":
-        # ... (Garder le Dashboard comme précédemment)
         st.markdown(f"<h2 class='gold-text'>Bienvenue, {u['prenom']} !</h2>", unsafe_allow_html=True)
         st.info("Espace membre en cours de mise à jour.")
 
