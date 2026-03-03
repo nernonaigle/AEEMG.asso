@@ -65,6 +65,7 @@ html, body, [class*="st-"] { font-family: 'Plus Jakarta Sans', sans-serif; }
     background-size: cover !important;
 }
 
+/* CHAMPS DE SAISIE */
 .stTextInput input, .stTextArea textarea, [data-baseweb="select"] {
     background-color: #ffffff !important;
     color: #000000 !important;
@@ -73,6 +74,7 @@ html, body, [class*="st-"] { font-family: 'Plus Jakarta Sans', sans-serif; }
     border-radius: 14px !important;
 }
 
+/* BULLES COMMENTAIRES FB */
 .comment-bubble {
     background-color: #f0f2f5;
     border-radius: 18px;
@@ -157,15 +159,15 @@ elif st.session_state.connecte:
     u = st.session_state.user_info
     
     if menu == "🏠 Tableau de Bord":
-        # HEADER SOCIAL (Utilisation de .get() pour éviter le KeyError)
+        # HEADER SOCIAL
         st.markdown(f"""
         <div style="position: relative; margin-bottom: 80px;">
             <div style="height: 180px; background: linear-gradient(90deg, #064e3b, #D4AF37); border-radius: 20px;"></div>
             <div style="position: absolute; bottom: -40px; left: 30px; display: flex; align-items: flex-end; gap: 20px;">
-                <img src="https://www.w3schools.com/howto/img_avatar.png" style="width: 120px; height: 120px; border-radius: 50%; border: 5px solid white; background: white; object-fit: cover;">
+                <img src="https://www.w3schools.com/howto/img_avatar.png" style="width: 120px; height: 120px; border-radius: 50%; border: 5px solid white; background: white;">
                 <div style="padding-bottom: 10px;">
-                    <h1 style="margin: 0; color: #064e3b; font-size: 2rem; font-weight: 800;">{u.get('prenom', '')} {u.get('nom', '')}</h1>
-                    <p style="margin: 0; font-weight: 800; color: #1e293b;">⭐ {u.get('organe_de_base', 'Membre AEEMG')}</p>
+                    <h1 style="margin: 0; color: #064e3b; font-size: 2rem; font-weight: 800;">{u['prenom']} {u['nom']}</h1>
+                    <p style="margin: 0; font-weight: 800; color: #1e293b;">⭐ {u['organe_de_base']}</p>
                 </div>
             </div>
         </div>
@@ -174,12 +176,12 @@ elif st.session_state.connecte:
         col_left, col_right = st.columns([1, 2], gap="large")
 
         with col_left:
-            st.markdown(f"**Email:** {u.get('email', 'Non renseigné')}\n\n**Ville:** {u.get('ville', 'Non renseignée')}")
+            st.markdown(f"**Email:** {u['email']}\n\n**Ville:** {u['ville']}")
 
         with col_right:
             # ZONE PUBLICATION
             with st.form("post_form", clear_on_submit=True):
-                txt = st.text_area("Quoi de neuf ?", placeholder=f"Exprimez-vous {u.get('prenom', '')}...")
+                txt = st.text_area("Quoi de neuf ?", placeholder=f"Exprimez-vous {u['prenom']}...")
                 media = st.file_uploader("Média", type=['jpg','png','mp4'])
                 if st.form_submit_button("🚀 PUBLIER"):
                     m_url, m_type = process_media(media)
@@ -189,19 +191,21 @@ elif st.session_state.connecte:
             # FLUX SOCIAL
             res_posts = supabase.table("posts").select("*").order("date_pub", desc=True).limit(10).execute()
             for post in res_posts.data:
+                # Récupérer les commentaires
                 res_c = supabase.table("commentaires").select("*").eq("post_id", post['id']).order("created_at").execute()
                 
                 with st.container():
                     st.markdown(f"""
                     <div class="post-card">
-                        <b>{post.get('auteur_nom', 'Anonyme')}</b> • <small>{post.get('date_pub', '')[:10]}</small>
-                        <div style="font-size:1.15rem; font-weight:600; margin:15px 0;">{post.get('contenu', '')}</div>
+                        <b>{post['auteur_nom']}</b> • <small>{post['date_pub'][:10]}</small>
+                        <div style="font-size:1.15rem; font-weight:600; margin:15px 0;">{post['contenu']}</div>
                     """, unsafe_allow_html=True)
                     
                     if post.get("media_url"):
                         if post.get("media_type") == "image": st.image(post["media_url"])
                         else: st.video(post["media_url"])
                     
+                    # COMPTEURS
                     st.markdown(f"""
                         <div style="display: flex; justify-content: space-between; color: #65676b; font-weight: 700; font-size: 0.9rem; margin-top: 10px;">
                             <span>❤️ {post.get('likes', 0)} J'aime</span>
@@ -210,6 +214,7 @@ elif st.session_state.connecte:
                         <hr style="margin:10px 0; opacity:0.1;">
                     """, unsafe_allow_html=True)
 
+                    # ACTIONS
                     cl, cc = st.columns(2)
                     with cl:
                         if st.button(f"👍 Like", key=f"lk_{post['id']}", use_container_width=True):
@@ -222,11 +227,11 @@ elif st.session_state.connecte:
                         with st.form(f"f_c_{post['id']}", clear_on_submit=True):
                             c_in = st.text_input("Votre avis...")
                             if st.form_submit_button("Envoyer"):
-                                supabase.table("commentaires").insert({"post_id": post['id'], "auteur_nom": u.get('prenom', 'Membre'), "contenu": c_in}).execute()
+                                supabase.table("commentaires").insert({"post_id": post['id'], "auteur_nom": u['prenom'], "contenu": c_in}).execute()
                                 st.rerun()
                         
                         for c in res_c.data:
-                            st.markdown(f"""<div class="comment-bubble"><b>{c.get('auteur_nom', 'Anonyme')}</b><br>{c.get('contenu', '')}</div>""", unsafe_allow_html=True)
+                            st.markdown(f"""<div class="comment-bubble"><b>{c['auteur_nom']}</b><br>{c['contenu']}</div>""", unsafe_allow_html=True)
                     
                     st.markdown("</div>", unsafe_allow_html=True)
 
