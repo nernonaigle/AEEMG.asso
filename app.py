@@ -59,13 +59,12 @@ def process_media(file, is_profile=False):
         return None, None
 
 # =========================================================
-# DESIGN / CSS MODERNE (2026 Style)
+# DESIGN / CSS MODERNE
 # =========================================================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
 
-/* Global Style */
 html, body, [class*="st-"] { font-family: 'Plus Jakarta Sans', sans-serif; }
 
 .stApp {
@@ -74,7 +73,6 @@ html, body, [class*="st-"] { font-family: 'Plus Jakarta Sans', sans-serif; }
     background-size: cover !important;
 }
 
-/* Glassmorphism Cards */
 .glass-card {
     background: rgba(255,255,255,0.04);
     backdrop-filter: blur(20px);
@@ -91,11 +89,8 @@ html, body, [class*="st-"] { font-family: 'Plus Jakarta Sans', sans-serif; }
     padding: 15px;
     border-left: 3px solid #D4AF37;
     margin-bottom: 25px;
-    transition: transform 0.3s ease;
 }
-.post-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.07); }
 
-/* Typography */
 .gold-text {
     background: linear-gradient(90deg, #D4AF37, #F4D03F);
     -webkit-background-clip: text;
@@ -103,36 +98,140 @@ html, body, [class*="st-"] { font-family: 'Plus Jakarta Sans', sans-serif; }
     font-weight: 800;
 }
 
-/* Badges */
 .status-badge {
     padding: 4px 12px;
     border-radius: 50px;
     font-size: 0.75rem;
     font-weight: 600;
-    text-transform: uppercase;
 }
-.badge-paye { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
-.badge-impaye { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
 
-/* Custom Buttons (CSS only for display) */
 div.stButton > button {
     border-radius: 12px;
     background: rgba(212, 175, 55, 0.1);
     color: #D4AF37;
     border: 1px solid #D4AF37;
     transition: 0.3s;
-    width: auto;
-    padding: 0.5rem 1.5rem;
 }
+
 div.stButton > button:hover {
     background: #D4AF37;
     color: white;
 }
 
-/* Sidebar Custom */
 [data-testid="stSidebar"] {
     background-color: rgba(1, 20, 15, 0.95);
     border-right: 1px solid rgba(255,255,255,0.1);
 }
 </style>
-""", unsafe_allow_html=True
+""", unsafe_allow_html=True)
+
+# =========================================================
+# INITIALISATION SESSION
+# =========================================================
+if "connecte" not in st.session_state: st.session_state.connecte = False
+if "user_info" not in st.session_state: st.session_state.user_info = None
+
+# =========================================================
+# SIDEBAR
+# =========================================================
+with st.sidebar:
+    st.markdown("<h1 style='text-align:center; color:#D4AF37; font-size: 1.8rem;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
+    
+    if st.session_state.connecte:
+        u = st.session_state.user_info
+        est_a_jour = check_cotisation_du_mois(u.get("id"))
+        
+        col_s1, col_s2 = st.columns([1, 2])
+        with col_s1:
+            avatar = u.get("photo_url") if u.get("photo_url") else "https://www.w3schools.com/howto/img_avatar.png"
+            st.image(avatar, width=65)
+        with col_s2:
+            st.markdown(f"**{u.get('prenom')}**")
+            badge = "✅" if est_a_jour else "⚠️"
+            st.caption(f"{badge} Cotisation")
+        
+        st.write("---")
+        menu = st.radio("Navigation", ["🏠 Tableau de Bord", "💳 Cotisations", "🪪 Carte de Membre", "📂 Documents", "🚪 Déconnexion"])
+    else:
+        menu = st.radio("Accès", ["🔑 Connexion", "📝 Inscription"])
+
+# =========================================================
+# PAGES
+# =========================================================
+if menu == "🔑 Connexion":
+    st.markdown("<h2 class='gold-text'>Connexion</h2>", unsafe_allow_html=True)
+    with st.container():
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        email = st.text_input("Email")
+        password = st.text_input("Mot de passe", type="password")
+        if st.button("Se connecter"):
+            res = supabase.table("membres").select("*").eq("email", email).eq("password", hasher_password(password)).execute()
+            if res.data:
+                user = res.data[0]
+                if user.get("statut") == "approuve":
+                    st.session_state.connecte = True
+                    st.session_state.user_info = user
+                    st.rerun()
+                else: st.warning("Compte en attente de validation.")
+            else: st.error("Identifiants incorrects.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+elif menu == "📝 Inscription":
+    st.markdown("<h2 class='gold-text'>Demande d'adhésion</h2>", unsafe_allow_html=True)
+    with st.form("inscription"):
+        col1, col2 = st.columns(2)
+        nom = col1.text_input("Nom")
+        prenom = col2.text_input("Prénom")
+        email = col1.text_input("Email")
+        password = col2.text_input("Mot de passe", type="password")
+        photo = st.file_uploader("Photo de profil", type=['jpg', 'png'])
+        if st.form_submit_button("Envoyer le dossier"):
+            p_url, _ = process_media(photo, is_profile=True)
+            data = {"nom": nom, "prenom": prenom, "email": email, "password": hasher_password(password), "statut": "en_attente", "photo_url": p_url}
+            supabase.table("membres").insert(data).execute()
+            st.success("Dossier envoyé !")
+
+elif st.session_state.connecte:
+    u = st.session_state.user_info
+
+    if menu == "🏠 Tableau de Bord":
+        st.markdown(f"<h1 class='gold-text'>Salam, {u.get('prenom')}</h1>", unsafe_allow_html=True)
+        
+        # Publication
+        with st.container():
+            st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+            with st.form("post_form", clear_on_submit=True):
+                txt = st.text_area("Quoi de neuf ?", placeholder="Partagez avec la communauté...")
+                media = st.file_uploader("Image/Vidéo", type=['jpg','png','mp4'])
+                if st.form_submit_button("Publier"):
+                    m_url, m_type = process_media(media)
+                    new_post = {
+                        "user_id": u['id'], "auteur_nom": f"{u['prenom']} {u['nom']}",
+                        "auteur_photo": u.get("photo_url"), "contenu": txt,
+                        "media_url": m_url, "media_type": m_type, "date_pub": datetime.now().isoformat()
+                    }
+                    supabase.table("posts").insert(new_post).execute()
+                    st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # Fil d'actu
+        res_posts = supabase.table("posts").select("*").order("date_pub", desc=True).limit(10).execute()
+        for post in res_posts.data:
+            with st.container():
+                st.markdown(f"""
+                <div class="post-card">
+                    <img src="{post.get('auteur_photo') or 'https://www.w3schools.com/howto/img_avatar.png'}" style="width:35px; height:35px; border-radius:50%; margin-right:10px; vertical-align:middle;">
+                    <b>{post.get('auteur_nom')}</b> • <small>{post.get('date_pub')[:10]}</small>
+                    <p style="margin-top:10px;">{post.get('contenu')}</p>
+                </div>
+                """, unsafe_allow_html=True)
+                if post.get("media_url"):
+                    if post.get("media_type") == "image": st.image(post["media_url"])
+                    else: st.video(post["media_url"])
+
+    elif menu == "🚪 Déconnexion":
+        st.session_state.clear()
+        st.rerun()
+
+else:
+    st.warning("Veuillez vous connecter.")
