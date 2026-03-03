@@ -59,7 +59,7 @@ def process_media(file, is_profile=False):
         return None, None
 
 # =========================================================
-# DESIGN / CSS MODERN LIGHT GLASS (Theme Blanc)
+# DESIGN / CSS MODERN LIGHT GLASS
 # =========================================================
 st.markdown("""
 <style>
@@ -70,21 +70,18 @@ html, body, [class*="st-"] {
     color: #1e293b;
 }
 
-/* Fond avec image bien visible et voile blanc léger */
 .stApp {
     background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.5)),
     url("https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=2000") no-repeat center center fixed;
     background-size: cover !important;
 }
 
-/* Sidebar en mode blanc flou */
 [data-testid="stSidebar"] {
     background-color: rgba(255, 255, 255, 0.7) !important;
     backdrop-filter: blur(15px);
     border-right: 1px solid rgba(255,255,255,0.3);
 }
 
-/* Cartes blanches effet "Verre Dépoli" */
 .glass-card {
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(20px);
@@ -93,10 +90,8 @@ html, body, [class*="st-"] {
     border: 1px solid rgba(255,255,255,0.8);
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
     margin-bottom: 20px;
-    color: #1e293b;
 }
 
-/* Posts avec bordure dorée */
 .post-card {
     background: rgba(255, 255, 255, 0.8);
     border-radius: 20px;
@@ -104,10 +99,8 @@ html, body, [class*="st-"] {
     border-left: 5px solid #D4AF37;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     margin-bottom: 25px;
-    color: #1e293b;
 }
 
-/* Titres en dégradé Doré/Sombre */
 .gold-text {
     background: linear-gradient(90deg, #B8860B, #D4AF37);
     -webkit-background-clip: text;
@@ -115,14 +108,6 @@ html, body, [class*="st-"] {
     font-weight: 800;
 }
 
-/* Inputs plus élégants */
-.stTextInput input, .stTextArea textarea {
-    background: rgba(255,255,255,0.9) !important;
-    border-radius: 12px !important;
-    border: 1px solid #e2e8f0 !important;
-}
-
-/* Boutons */
 div.stButton > button {
     border-radius: 12px;
     background: #064e3b;
@@ -130,10 +115,10 @@ div.stButton > button {
     border: none;
     transition: 0.3s;
     font-weight: 600;
+    padding: 0.5rem 2rem;
 }
 div.stButton > button:hover {
     background: #D4AF37;
-    color: white;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -208,14 +193,49 @@ elif st.session_state.connecte:
     u = st.session_state.user_info
 
     if menu == "🏠 Tableau de Bord":
-        st.markdown(f"<h1 class='gold-text'>Salam, {u.get('prenom')}</h1>", unsafe_allow_html=True)
-        
-        # Publication
-        with st.container():
+        # HEADER DE PROFIL (STYLE FACEBOOK)
+        st.markdown(f"""
+        <div style="position: relative; margin-bottom: 80px;">
+            <div style="height: 180px; background: linear-gradient(90deg, #064e3b, #D4AF37); border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);"></div>
+            <div style="position: absolute; bottom: -50px; left: 40px; display: flex; align-items: flex-end; gap: 20px;">
+                <img src="{u.get('photo_url') or 'https://www.w3schools.com/howto/img_avatar.png'}" 
+                     style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.9); object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: white;">
+                <div style="padding-bottom: 10px;">
+                    <h1 style="margin: 0; color: #064e3b; font-size: 2.2rem; font-weight: 800;">{u.get('prenom')} {u.get('nom')}</h1>
+                    <p style="margin: 0; color: #475569; font-weight: 500;">📍 Membre de la communauté AEEMG</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col_info, col_feed = st.columns([1, 2], gap="large")
+
+        with col_info:
             st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color: #064e3b; margin-top:0;'>📋 Informations</h4>", unsafe_allow_html=True)
+            est_a_jour = check_cotisation_du_mois(u.get("id"))
+            statut_badge = "✅ À jour" if est_a_jour else "⚠️ Cotisation due"
+            st.markdown(f"""
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="background: white; padding: 10px; border-radius: 10px;">
+                        <small style="color: #64748b;">Email</small><br><b>{u.get('email')}</b>
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 10px;">
+                        <small style="color: #64748b;">Statut</small><br><b style="color: {'#10b981' if est_a_jour else '#ef4444'};">{statut_badge}</b>
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 10px;">
+                        <small style="color: #64748b;">Depuis le</small><br><b>{u.get('created_at', '2026')[:10]}</b>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with col_feed:
+            # Zone de Publication
+            st.markdown("<div class='glass-card' style='padding: 20px;'>", unsafe_allow_html=True)
             with st.form("post_form", clear_on_submit=True):
-                txt = st.text_area("Quoi de neuf ?", placeholder="Partagez avec la communauté...")
-                media = st.file_uploader("Image/Vidéo", type=['jpg','png','mp4'])
+                txt = st.text_area("", placeholder=f"Quoi de neuf sur le mur, {u.get('prenom')} ?")
+                media = st.file_uploader("📷 Photo ou Vidéo", type=['jpg','png','mp4'])
                 if st.form_submit_button("Publier"):
                     m_url, m_type = process_media(media)
                     new_post = {
@@ -227,20 +247,26 @@ elif st.session_state.connecte:
                     st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # Fil d'actu
-        res_posts = supabase.table("posts").select("*").order("date_pub", desc=True).limit(10).execute()
-        for post in res_posts.data:
-            with st.container():
-                st.markdown(f"""
-                <div class="post-card">
-                    <img src="{post.get('auteur_photo') or 'https://www.w3schools.com/howto/img_avatar.png'}" style="width:35px; height:35px; border-radius:50%; margin-right:10px; vertical-align:middle; border: 1px solid #D4AF37;">
-                    <b style="color: #064e3b;">{post.get('auteur_nom')}</b> • <small style="color: #64748b;">{post.get('date_pub')[:10]}</small>
-                    <p style="margin-top:10px; color: #334155;">{post.get('contenu')}</p>
-                </div>
-                """, unsafe_allow_html=True)
-                if post.get("media_url"):
-                    if post.get("media_type") == "image": st.image(post["media_url"])
-                    else: st.video(post["media_url"])
+            # Fil d'actu
+            res_posts = supabase.table("posts").select("*").order("date_pub", desc=True).limit(15).execute()
+            for post in res_posts.data:
+                with st.container():
+                    st.markdown(f"""
+                    <div class="post-card">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                            <img src="{post.get('auteur_photo') or 'https://www.w3schools.com/howto/img_avatar.png'}" 
+                                 style="width:45px; height:45px; border-radius:50%; object-fit: cover; border: 2px solid #D4AF37;">
+                            <div>
+                                <b style="color: #064e3b; display: block;">{post.get('auteur_nom')}</b>
+                                <small style="color: #94a3b8;">{post.get('date_pub')[:10]}</small>
+                            </div>
+                        </div>
+                        <p style="color: #334155; font-size: 1.05rem;">{post.get('contenu')}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    if post.get("media_url"):
+                        if post.get("media_type") == "image": st.image(post["media_url"], use_container_width=True)
+                        else: st.video(post["media_url"])
 
     elif menu == "🚪 Déconnexion":
         st.session_state.clear()
