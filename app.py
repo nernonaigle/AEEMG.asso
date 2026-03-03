@@ -59,68 +59,81 @@ def process_media(file, is_profile=False):
         return None, None
 
 # =========================================================
-# DESIGN / CSS MODERNE
+# DESIGN / CSS MODERN LIGHT GLASS (Theme Blanc)
 # =========================================================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
 
-html, body, [class*="st-"] { font-family: 'Plus Jakarta Sans', sans-serif; }
+html, body, [class*="st-"] { 
+    font-family: 'Plus Jakarta Sans', sans-serif; 
+    color: #1e293b;
+}
 
+/* Fond avec image bien visible et voile blanc léger */
 .stApp {
-    background: linear-gradient(135deg, rgba(2,44,34,0.97), rgba(1,20,15,0.99)),
+    background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.5)),
     url("https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=2000") no-repeat center center fixed;
     background-size: cover !important;
 }
 
+/* Sidebar en mode blanc flou */
+[data-testid="stSidebar"] {
+    background-color: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(15px);
+    border-right: 1px solid rgba(255,255,255,0.3);
+}
+
+/* Cartes blanches effet "Verre Dépoli" */
 .glass-card {
-    background: rgba(255,255,255,0.04);
+    background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(20px);
     border-radius: 24px;
-    padding: 20px;
-    border: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    padding: 25px;
+    border: 1px solid rgba(255,255,255,0.8);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
     margin-bottom: 20px;
+    color: #1e293b;
 }
 
+/* Posts avec bordure dorée */
 .post-card {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.8);
     border-radius: 20px;
-    padding: 15px;
-    border-left: 3px solid #D4AF37;
+    padding: 20px;
+    border-left: 5px solid #D4AF37;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     margin-bottom: 25px;
+    color: #1e293b;
 }
 
+/* Titres en dégradé Doré/Sombre */
 .gold-text {
-    background: linear-gradient(90deg, #D4AF37, #F4D03F);
+    background: linear-gradient(90deg, #B8860B, #D4AF37);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 800;
 }
 
-.status-badge {
-    padding: 4px 12px;
-    border-radius: 50px;
-    font-size: 0.75rem;
-    font-weight: 600;
+/* Inputs plus élégants */
+.stTextInput input, .stTextArea textarea {
+    background: rgba(255,255,255,0.9) !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
 }
 
+/* Boutons */
 div.stButton > button {
     border-radius: 12px;
-    background: rgba(212, 175, 55, 0.1);
-    color: #D4AF37;
-    border: 1px solid #D4AF37;
+    background: #064e3b;
+    color: white;
+    border: none;
     transition: 0.3s;
+    font-weight: 600;
 }
-
 div.stButton > button:hover {
     background: #D4AF37;
     color: white;
-}
-
-[data-testid="stSidebar"] {
-    background-color: rgba(1, 20, 15, 0.95);
-    border-right: 1px solid rgba(255,255,255,0.1);
 }
 </style>
 """, unsafe_allow_html=True)
@@ -135,7 +148,7 @@ if "user_info" not in st.session_state: st.session_state.user_info = None
 # SIDEBAR
 # =========================================================
 with st.sidebar:
-    st.markdown("<h1 style='text-align:center; color:#D4AF37; font-size: 1.8rem;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align:center; color:#064e3b; font-size: 1.8rem;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
     
     if st.session_state.connecte:
         u = st.session_state.user_info
@@ -220,9 +233,9 @@ elif st.session_state.connecte:
             with st.container():
                 st.markdown(f"""
                 <div class="post-card">
-                    <img src="{post.get('auteur_photo') or 'https://www.w3schools.com/howto/img_avatar.png'}" style="width:35px; height:35px; border-radius:50%; margin-right:10px; vertical-align:middle;">
-                    <b>{post.get('auteur_nom')}</b> • <small>{post.get('date_pub')[:10]}</small>
-                    <p style="margin-top:10px;">{post.get('contenu')}</p>
+                    <img src="{post.get('auteur_photo') or 'https://www.w3schools.com/howto/img_avatar.png'}" style="width:35px; height:35px; border-radius:50%; margin-right:10px; vertical-align:middle; border: 1px solid #D4AF37;">
+                    <b style="color: #064e3b;">{post.get('auteur_nom')}</b> • <small style="color: #64748b;">{post.get('date_pub')[:10]}</small>
+                    <p style="margin-top:10px; color: #334155;">{post.get('contenu')}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 if post.get("media_url"):
