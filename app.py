@@ -98,7 +98,7 @@ html, body, [class*="st-"] {
     padding: 20px;
     border-left: 5px solid #D4AF37;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    margin-bottom: 25px;
+    margin-bottom: 10px;
 }
 
 .gold-text {
@@ -115,10 +115,15 @@ div.stButton > button {
     border: none;
     transition: 0.3s;
     font-weight: 600;
-    padding: 0.5rem 2rem;
 }
 div.stButton > button:hover {
     background: #D4AF37;
+}
+
+/* Style spécifique pour les boutons de like/comment sous les posts */
+.stButton button[key^="like_"], .stButton button[key^="comm_"] {
+    padding: 0.2rem 1rem !important;
+    font-size: 0.8rem !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -223,9 +228,6 @@ elif st.session_state.connecte:
                     <div style="background: white; padding: 10px; border-radius: 10px;">
                         <small style="color: #64748b;">Statut</small><br><b style="color: {'#10b981' if est_a_jour else '#ef4444'};">{statut_badge}</b>
                     </div>
-                    <div style="background: white; padding: 10px; border-radius: 10px;">
-                        <small style="color: #64748b;">Depuis le</small><br><b>{u.get('created_at', '2026')[:10]}</b>
-                    </div>
                 </div>
             """, unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
@@ -234,9 +236,9 @@ elif st.session_state.connecte:
             # Zone de Publication
             st.markdown("<div class='glass-card' style='padding: 20px;'>", unsafe_allow_html=True)
             with st.form("post_form", clear_on_submit=True):
-                txt = st.text_area("", placeholder=f"Quoi de neuf sur le mur, {u.get('prenom')} ?")
+                txt = st.text_area("", placeholder=f"Quoi de neuf, {u.get('prenom')} ?")
                 media = st.file_uploader("📷 Photo ou Vidéo", type=['jpg','png','mp4'])
-                if st.form_submit_button("Publier"):
+                if st.form_submit_button("Publier sur mon mur"):
                     m_url, m_type = process_media(media)
                     new_post = {
                         "user_id": u['id'], "auteur_nom": f"{u['prenom']} {u['nom']}",
@@ -251,6 +253,7 @@ elif st.session_state.connecte:
             res_posts = supabase.table("posts").select("*").order("date_pub", desc=True).limit(15).execute()
             for post in res_posts.data:
                 with st.container():
+                    # Carte du Post
                     st.markdown(f"""
                     <div class="post-card">
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
@@ -264,9 +267,24 @@ elif st.session_state.connecte:
                         <p style="color: #334155; font-size: 1.05rem;">{post.get('contenu')}</p>
                     </div>
                     """, unsafe_allow_html=True)
+                    
+                    # Media
                     if post.get("media_url"):
-                        if post.get("media_type") == "image": st.image(post["media_url"], use_container_width=True)
-                        else: st.video(post["media_url"])
+                        if post.get("media_type") == "image": 
+                            st.image(post["media_url"], use_container_width=True)
+                        else: 
+                            st.video(post["media_url"])
+                    
+                    # Barre Like / Comment
+                    c1, c2, c3 = st.columns([1, 1, 2])
+                    with c1:
+                        if st.button(f"❤️ Like", key=f"like_{post['id']}"):
+                            st.toast(f"Vous aimez le post de {post['auteur_nom']}")
+                    with c2:
+                        if st.button(f"💬 Commenter", key=f"comm_{post['id']}"):
+                            st.info("Espace commentaire bientôt disponible !")
+                    
+                    st.markdown("<div style='margin-bottom: 30px;'></div>", unsafe_allow_html=True)
 
     elif menu == "🚪 Déconnexion":
         st.session_state.clear()
