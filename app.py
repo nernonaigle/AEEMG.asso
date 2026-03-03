@@ -59,46 +59,68 @@ def process_media(file, is_profile=False):
         return None, None
 
 # =========================================================
-# DESIGN / CSS MODERN LIGHT GLASS
+# DESIGN / CSS MODERN LIGHT GLASS (CORRIGÉ LISIBILITÉ)
 # =========================================================
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 html, body, [class*="st-"] { 
     font-family: 'Plus Jakarta Sans', sans-serif; 
-    color: #1e293b;
+    color: #0f172a; /* Texte plus sombre pour contraste */
 }
 
 .stApp {
-    background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.5)),
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.4)),
     url("https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=2000") no-repeat center center fixed;
     background-size: cover !important;
 }
 
+/* --- AMÉLIORATION DES SAISIES ET ÉCRITURES --- */
+.stTextInput input, .stTextArea textarea {
+    background-color: rgba(255, 255, 255, 0.98) !important; /* Fond bien blanc */
+    color: #0f172a !important;
+    font-weight: 600 !important; /* Écriture plus grasse */
+    font-size: 1rem !important;
+    border: 2px solid #cbd5e1 !important;
+    border-radius: 14px !important;
+}
+
+label p {
+    font-weight: 800 !important; /* Titres de champs plus épais */
+    color: #064e3b !important;
+    font-size: 1.05rem !important;
+}
+
+/* Sidebar plus lisible */
 [data-testid="stSidebar"] {
-    background-color: rgba(255, 255, 255, 0.7) !important;
-    backdrop-filter: blur(15px);
-    border-right: 1px solid rgba(255,255,255,0.3);
+    background-color: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(20px);
 }
 
 .glass-card {
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(25px);
     border-radius: 24px;
     padding: 25px;
-    border: 1px solid rgba(255,255,255,0.8);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    border: 1px solid rgba(255,255,255,0.9);
+    box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.05);
     margin-bottom: 20px;
 }
 
 .post-card {
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 20px;
-    padding: 20px;
-    border-left: 5px solid #D4AF37;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 22px;
+    padding: 25px;
+    border-left: 7px solid #D4AF37;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
     margin-bottom: 10px;
+}
+
+.post-card p {
+    font-weight: 500 !important; /* Texte des posts plus épais */
+    font-size: 1.1rem !important;
+    color: #1e293b;
 }
 
 .gold-text {
@@ -114,16 +136,12 @@ div.stButton > button {
     color: white;
     border: none;
     transition: 0.3s;
-    font-weight: 600;
+    font-weight: 700;
+    padding: 0.6rem 2.5rem;
 }
 div.stButton > button:hover {
     background: #D4AF37;
-}
-
-/* Style spécifique pour les boutons de like/comment sous les posts */
-.stButton button[key^="like_"], .stButton button[key^="comm_"] {
-    padding: 0.2rem 1rem !important;
-    font-size: 0.8rem !important;
+    transform: translateY(-2px);
 }
 </style>
 """, unsafe_allow_html=True)
@@ -200,14 +218,14 @@ elif st.session_state.connecte:
     if menu == "🏠 Tableau de Bord":
         # HEADER DE PROFIL (STYLE FACEBOOK)
         st.markdown(f"""
-        <div style="position: relative; margin-bottom: 80px;">
-            <div style="height: 180px; background: linear-gradient(90deg, #064e3b, #D4AF37); border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);"></div>
-            <div style="position: absolute; bottom: -50px; left: 40px; display: flex; align-items: flex-end; gap: 20px;">
+        <div style="position: relative; margin-bottom: 90px;">
+            <div style="height: 190px; background: linear-gradient(90deg, #064e3b, #D4AF37); border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);"></div>
+            <div style="position: absolute; bottom: -55px; left: 40px; display: flex; align-items: flex-end; gap: 20px;">
                 <img src="{u.get('photo_url') or 'https://www.w3schools.com/howto/img_avatar.png'}" 
-                     style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.9); object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: white;">
-                <div style="padding-bottom: 10px;">
-                    <h1 style="margin: 0; color: #064e3b; font-size: 2.2rem; font-weight: 800;">{u.get('prenom')} {u.get('nom')}</h1>
-                    <p style="margin: 0; color: #475569; font-weight: 500;">📍 Membre de la communauté AEEMG</p>
+                     style="width: 130px; height: 130px; border-radius: 50%; border: 5px solid rgba(255,255,255,1); object-fit: cover; box-shadow: 0 8px 15px rgba(0,0,0,0.2); background: white;">
+                <div style="padding-bottom: 12px;">
+                    <h1 style="margin: 0; color: #064e3b; font-size: 2.3rem; font-weight: 800;">{u.get('prenom')} {u.get('nom')}</h1>
+                    <p style="margin: 0; color: #334155; font-weight: 700; font-size: 1.1rem;">💎 Membre Actif AEEMG</p>
                 </div>
             </div>
         </div>
@@ -217,16 +235,16 @@ elif st.session_state.connecte:
 
         with col_info:
             st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-            st.markdown("<h4 style='color: #064e3b; margin-top:0;'>📋 Informations</h4>", unsafe_allow_html=True)
+            st.markdown("<h3 style='color: #064e3b; margin-top:0;'>📌 À propos</h3>", unsafe_allow_html=True)
             est_a_jour = check_cotisation_du_mois(u.get("id"))
-            statut_badge = "✅ À jour" if est_a_jour else "⚠️ Cotisation due"
+            statut_badge = "✅ Membre en règle" if est_a_jour else "⚠️ Cotisation en attente"
             st.markdown(f"""
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <div style="background: white; padding: 10px; border-radius: 10px;">
-                        <small style="color: #64748b;">Email</small><br><b>{u.get('email')}</b>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div style="background: rgba(255,255,255,0.8); padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <small style="color: #64748b; font-weight: 600;">Contact</small><br><b>{u.get('email')}</b>
                     </div>
-                    <div style="background: white; padding: 10px; border-radius: 10px;">
-                        <small style="color: #64748b;">Statut</small><br><b style="color: {'#10b981' if est_a_jour else '#ef4444'};">{statut_badge}</b>
+                    <div style="background: rgba(255,255,255,0.8); padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <small style="color: #64748b; font-weight: 600;">État Financier</small><br><b style="color: {'#10b981' if est_a_jour else '#ef4444'};">{statut_badge}</b>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
@@ -234,11 +252,11 @@ elif st.session_state.connecte:
 
         with col_feed:
             # Zone de Publication
-            st.markdown("<div class='glass-card' style='padding: 20px;'>", unsafe_allow_html=True)
+            st.markdown("<div class='glass-card' style='padding: 25px;'>", unsafe_allow_html=True)
             with st.form("post_form", clear_on_submit=True):
-                txt = st.text_area("", placeholder=f"Quoi de neuf, {u.get('prenom')} ?")
-                media = st.file_uploader("📷 Photo ou Vidéo", type=['jpg','png','mp4'])
-                if st.form_submit_button("Publier sur mon mur"):
+                txt = st.text_area("Exprimez-vous", placeholder=f"Quoi de neuf, {u.get('prenom')} ?")
+                media = st.file_uploader("Ajouter un média", type=['jpg','png','mp4'])
+                if st.form_submit_button("🚀 Publier sur mon mur"):
                     m_url, m_type = process_media(media)
                     new_post = {
                         "user_id": u['id'], "auteur_nom": f"{u['prenom']} {u['nom']}",
@@ -253,42 +271,38 @@ elif st.session_state.connecte:
             res_posts = supabase.table("posts").select("*").order("date_pub", desc=True).limit(15).execute()
             for post in res_posts.data:
                 with st.container():
-                    # Carte du Post
                     st.markdown(f"""
                     <div class="post-card">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
                             <img src="{post.get('auteur_photo') or 'https://www.w3schools.com/howto/img_avatar.png'}" 
-                                 style="width:45px; height:45px; border-radius:50%; object-fit: cover; border: 2px solid #D4AF37;">
+                                 style="width:50px; height:50px; border-radius:50%; object-fit: cover; border: 2.5px solid #D4AF37;">
                             <div>
-                                <b style="color: #064e3b; display: block;">{post.get('auteur_nom')}</b>
-                                <small style="color: #94a3b8;">{post.get('date_pub')[:10]}</small>
+                                <b style="color: #064e3b; display: block; font-size: 1.1rem;">{post.get('auteur_nom')}</b>
+                                <small style="color: #64748b; font-weight: 500;">{post.get('date_pub')[:10]}</small>
                             </div>
                         </div>
-                        <p style="color: #334155; font-size: 1.05rem;">{post.get('contenu')}</p>
+                        <p>{post.get('contenu')}</p>
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # Media
                     if post.get("media_url"):
-                        if post.get("media_type") == "image": 
-                            st.image(post["media_url"], use_container_width=True)
-                        else: 
-                            st.video(post["media_url"])
+                        if post.get("media_type") == "image": st.image(post["media_url"], use_container_width=True)
+                        else: st.video(post["media_url"])
                     
-                    # Barre Like / Comment
+                    # Boutons d'interaction
                     c1, c2, c3 = st.columns([1, 1, 2])
                     with c1:
                         if st.button(f"❤️ Like", key=f"like_{post['id']}"):
-                            st.toast(f"Vous aimez le post de {post['auteur_nom']}")
+                            st.toast(f"Coup de cœur sur le post de {post['auteur_nom']} !")
                     with c2:
                         if st.button(f"💬 Commenter", key=f"comm_{post['id']}"):
-                            st.info("Espace commentaire bientôt disponible !")
+                            st.info("La zone de commentaires est en cours de développement.")
                     
-                    st.markdown("<div style='margin-bottom: 30px;'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='margin-bottom: 40px;'></div>", unsafe_allow_html=True)
 
     elif menu == "🚪 Déconnexion":
         st.session_state.clear()
         st.rerun()
 
 else:
-    st.warning("Veuillez vous connecter.")
+    st.warning("Veuillez vous connecter pour accéder à votre espace.")
