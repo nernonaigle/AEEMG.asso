@@ -214,37 +214,71 @@ elif st.session_state.connecte:
 
         st.markdown("---")
 
-        # --- 2. FIL D'ACTUALITÉ ---
+        # --- 2. FIL D'ACTUALITÉ ENRICHI (Likes & Commentaires) ---
         st.markdown("### 📰 Fil d'actualité")
         try:
             res_posts = supabase.table("posts").select("*").order("date_pub", desc=True).limit(10).execute()
+            
             if res_posts.data:
                 for post in res_posts.data:
                     with st.container():
+                        st.markdown("<div style='background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+                        
+                        # Header du Post
                         avatar_p = post.get("auteur_photo") or "https://www.w3schools.com/howto/img_avatar.png"
                         st.markdown(f"""
-                        <div class="glass-card" style="border-left: 4px solid #D4AF37;">
                             <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                <img src="{avatar_p}" style="width:45px; height:45px; border-radius:50%; margin-right:12px; object-fit:cover; border:1px solid #D4AF37;">
+                                <img src="{avatar_p}" style="width:40px; height:40px; border-radius:50%; margin-right:12px; object-fit:cover;">
                                 <div>
                                     <b style="color:#D4AF37;">{post.get('auteur_nom', 'Membre')}</b><br>
                                     <small style="color:#888;">{post.get('date_pub', '')[:10]}</small>
                                 </div>
                             </div>
                             <p style="font-size:1.1em;">{post.get('contenu', '')}</p>
-                        </div>
                         """, unsafe_allow_html=True)
-                        
+
+                        # Média
                         if post.get("media_url"):
                             if post.get("media_type") == "image":
                                 st.image(post["media_url"], use_container_width=True)
                             elif post.get("media_type") == "video":
                                 st.video(post["media_url"])
-                        st.write("") 
+
+                        # --- INTERACTIONS : LIKE & COMMENTAIRES ---
+                        col_lk, col_cm = st.columns([1, 3])
+                        
+                        # Bouton Like (Baraka)
+                        if col_lk.button(f"✨ Baraka ({post.get('likes', 0)})", key=f"lk_{post['id']}"):
+                            new_likes = post.get('likes', 0) + 1
+                            supabase.table("posts").update({"likes": new_likes}).eq("id", post['id']).execute()
+                            st.rerun()
+
+                        # Section Commentaires
+                        with st.expander(f"💬 Commentaires"):
+                            # Afficher les commentaires existants
+                            res_cm = supabase.table("comments").select("*").eq("post_id", post['id']).order("date_pub").execute()
+                            for cm in res_cm.data:
+                                st.markdown(f"**{cm['auteur_nom']}**: {cm['contenu']}")
+                                st.caption(f"Le {cm['date_pub'][:10]}")
+                            
+                            # Ajouter un commentaire
+                            with st.form(f"f_cm_{post['id']}", clear_on_submit=True):
+                                txt_cm = st.text_input("Votre commentaire...", key=f"in_{post['id']}")
+                                if st.form_submit_button("Envoyer"):
+                                    if txt_cm:
+                                        supabase.table("comments").insert({
+                                            "post_id": post['id'],
+                                            "user_id": u['id'],
+                                            "auteur_nom": f"{u['prenom']} {u['nom']}",
+                                            "contenu": txt_cm
+                                        }).execute()
+                                        st.rerun()
+
+                        st.markdown("</div>", unsafe_allow_html=True)
             else:
-                st.info("Aucun message pour le moment.")
-        except Exception:
-            st.info("Le fil d'actualité sera activé après création de la table 'posts'.")
+                st.info("Rien à signaler pour le moment.")
+        except Exception as e:
+            st.error(f"Erreur de flux : {e}")
 
     elif menu == "💳 Cotisations":
         st.markdown("<h2 class='gold-text'>Cotisations</h2>", unsafe_allow_html=True)
