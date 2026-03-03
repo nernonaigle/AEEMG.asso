@@ -63,57 +63,24 @@ html, body, [class*="st-"] {{ font-family: 'Plus Jakarta Sans', sans-serif; }}
 if "connecte" not in st.session_state:
     st.session_state.connecte, st.session_state.user_info = False, None
 
-# --- MENU HORIZONTAL EN HAUT ---
-st.markdown(f"<h1 style='text-align:center; color:{VERT_FORET};'>🌙 AEEMG</h1>", unsafe_allow_html=True)
-
-# Initialisation du menu
-menu = None
-col_connexion, col_inscription = st.columns([1,1])
-
-with col_connexion:
-    if st.button("🔑 Connexion"):
-        menu = "Connexion"
-
-with col_inscription:
-    if st.button("📝 Inscription"):
-        menu = "Inscription"
-
-# Si un utilisateur est connecté, on remplace par le menu complet
-if st.session_state.get("connecte", False):
-    u = st.session_state.user_info
-    est_a_jour = check_cotisation_du_mois(u['id'])
-    img_p = u.get('photo_url') or "https://www.w3schools.com/howto/img_avatar.png"
-    
-    # Affichage du profil en haut à gauche
-    col_img, col_info = st.columns([1,3])
-    with col_img:
-        st.image(img_p, width=70, caption=None, output_format="PNG")
-    with col_info:
-        st.markdown(f"<p style='color:white; margin-bottom:0;'><b>{u['prenom']}</b></p>", unsafe_allow_html=True)
+# --- SIDEBAR & NAVIGATION ---
+with st.sidebar:
+    st.markdown(f"<h1 style='text-align:center; color:{VERT_FORET};'>🌙 AEEMG</h1>", unsafe_allow_html=True)
+    if st.session_state.connecte:
+        u = st.session_state.user_info
+        est_a_jour = check_cotisation_du_mois(u['id'])
+        img_p = u.get('photo_url') or "https://www.w3schools.com/howto/img_avatar.png"
+        st.markdown(f"<div style='text-align:center;'><img src='{img_p}' style='width:70px;height:70px;border-radius:50%;border:2px solid {VERT_FORET}; object-fit: cover;'></div>", unsafe_allow_html=True)
+        st.markdown(f"<p style='text-align:center; color:white; margin-bottom:0;'><b>{u['prenom']}</b></p>", unsafe_allow_html=True)
         status_html = "<span class='badge-paye'>✅ À JOUR</span>" if est_a_jour else "<span class='badge-impaye'>⚠️ À RÉGLER</span>"
-        st.markdown(status_html, unsafe_allow_html=True)
-
-    # Menu principal horizontal
-    menu_options = ["🏠 Tableau de Bord", "💳 Cotisations", "🪪 Carte de Membre", "📂 Documents", "📸 Galerie"]
-    if u['email'] == "nernonaigle99@gmail.com":
-        menu_options.append("🛡️ Admin Approbation")
-    menu_options.append("🚪 Déconnexion")
-    
-    # Création du menu horizontal avec boutons
-    menu_cols = st.columns(len(menu_options))
-    for idx, option in enumerate(menu_options):
-        with menu_cols[idx]:
-            if st.button(option):
-                menu = option
-
-# Conservation du dernier choix pour éviter que le menu disparaisse après un rerun
-if "menu_state" not in st.session_state:
-    st.session_state.menu_state = "Connexion"
-
-if menu:
-    st.session_state.menu_state = menu
-
-menu = st.session_state.menu_state
+        st.markdown(f"<div style='text-align:center;'>{status_html}</div>", unsafe_allow_html=True)
+        menu_options = ["🏠 Tableau de Bord", "💳 Cotisations", "🪪 Carte de Membre", "📂 Documents", "📸 Galerie"]
+        if u['email'] == "nernonaigle99@gmail.com":
+            menu_options.append("🛡️ Admin Approbation")
+        menu_options.append("🚪 Déconnexion")
+        menu = st.radio("Menu", menu_options)
+    else:
+        menu = st.radio("Accès", ["🔑 Connexion", "📝 Inscription"])
 
 # --- PAGES ---
 # Connexion
