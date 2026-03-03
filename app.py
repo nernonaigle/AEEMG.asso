@@ -177,13 +177,89 @@ elif menu == "📝 Inscription":
 elif st.session_state.connecte:
     u = st.session_state.user_info
     
-    if menu == "🏠 Tableau de Bord":
+# --- DÉBUT DE LA SECTION ENRICHIE ---
+    elif menu == "🏠 Tableau de Bord":
+        u = st.session_state.user_info
         st.markdown(f"<h1 class='gold-text'>Salam, {u.get('prenom')}</h1>", unsafe_allow_html=True)
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(f"<div class='glass-card'><h3>Mon Statut</h3><p>{u.get('statut', 'N/A').upper()}</p></div>", unsafe_allow_html=True)
-        with col2:
-            st.markdown(f"<div class='glass-card'><h3>Organe</h3><p>{u.get('organe_base', 'N/A')}</p></div>", unsafe_allow_html=True)
+
+        # --- 1. ZONE DE PUBLICATION (STATUT) ---
+        with st.container():
+            st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+            st.markdown("### ✍️ Quoi de neuf dans la communauté ?")
+            
+            with st.form("form_post", clear_on_submit=True):
+                contenu = st.text_area("Exprimez-vous...", placeholder=f"Partagez quelque chose avec l'AEEMG, {u.get('prenom')}...")
+                media_post = st.file_uploader("Ajouter une image ou vidéo", type=['jpg', 'png', 'mp4'])
+                
+                if st.form_submit_button("Publier"):
+                    if contenu or media_post:
+                        m_url, m_type = process_media(media_post)
+                        new_post = {
+                            "user_id": u['id'],
+                            "auteur_nom": f"{u['prenom']} {u['nom']}",
+                            "auteur_photo": u.get("photo_url"),
+                            "contenu": contenu,
+                            "media_url": m_url,
+                            "media_type": m_type,
+                            "date_pub": datetime.now().isoformat(),
+                            "likes": 0
+                        }
+                        # Insertion dans une nouvelle table 'posts' sur Supabase
+                        try:
+                            supabase.table("posts").insert(new_post).execute()
+                            st.success("Publication partagée !")
+                            st.rerun()
+                        except Exception as e:
+                            st.error("Assurez-vous d'avoir créé la table 'posts' dans Supabase.")
+                    else:
+                        st.warning("Le message est vide !")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown("---")
+
+        # --- 2. FIL D'ACTUALITÉ (NEWSFEED) ---
+        st.markdown("### 📰 Fil d'actualité")
+        
+        try:
+            # Récupération des posts (du plus récent au plus ancien)
+            res_posts = supabase.table("posts").select("*").order("date_pub", desc=True).limit(10).execute()
+            
+            if res_posts.data:
+                for post in res_posts.data:
+                    with st.container():
+                        # Style du Post à la Facebook
+                        avatar_post = post.get("auteur_photo") or "https://www.w3schools.com/howto/img_avatar.png"
+                        
+                        st.markdown(f"""
+                        <div class="glass-card" style="margin-bottom: 20px; border-left: 4px solid #D4AF37;">
+                            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                <img src="{avatar_post}" style="width:50px; height:50px; border-radius:50%; margin-right: 15px; border: 1px solid #D4AF37; object-fit: cover;">
+                                <div>
+                                    <b style="color: #D4AF37; font-size: 1.1em;">{post['auteur_nom']}</b><br>
+                                    <small style="color: #aaa;">{post['date_pub'][:10]} à {post['date_pub'][11:16]}</small>
+                                </div>
+                            </div>
+                            <p style="font-size: 1.1em; line-height: 1.5;">{post['contenu']}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Affichage du média s'il existe
+                        if post.get("media_url"):
+                            if post.get("media_type") == "image":
+                                st.image(post["media_url"], use_container_width=True)
+                            elif post.get("media_type") == "video":
+                                st.video(post["media_url"])
+                        
+                        # Interaction (Like)
+                        col_l, col_r = st.columns([1, 4])
+                        if col_l.button(f"👍 {post.get('likes', 0)} Baraka", key=f"like_{post['id']}"):
+                            # Logique pour incrémenter les likes (à implémenter en base)
+                            pass
+                        
+            else:
+                st.info("Aucune publication pour le moment. Soyez le premier !")
+        except:
+            st.info("Le fil d'actualité sera disponible dès que la table 'posts' sera créée sur Supabase.")
 
     elif menu == "💳 Cotisations":
         st.markdown("<h2 class='gold-text'>Cotisations</h2>", unsafe_allow_html=True)
