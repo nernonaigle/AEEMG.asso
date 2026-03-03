@@ -59,7 +59,7 @@ def process_media(file, is_profile=False):
         return None, None
 
 # =========================================================
-# DESIGN / CSS MODERN LIGHT GLASS (CORRIGÉ LISIBILITÉ)
+# DESIGN / CSS MODERN LIGHT GLASS (LISIBILITÉ MAXIMALE)
 # =========================================================
 st.markdown("""
 <style>
@@ -67,7 +67,7 @@ st.markdown("""
 
 html, body, [class*="st-"] { 
     font-family: 'Plus Jakarta Sans', sans-serif; 
-    color: #0f172a; /* Texte plus sombre pour contraste */
+    color: #0f172a; 
 }
 
 .stApp {
@@ -76,23 +76,23 @@ html, body, [class*="st-"] {
     background-size: cover !important;
 }
 
-/* --- AMÉLIORATION DES SAISIES ET ÉCRITURES --- */
-.stTextInput input, .stTextArea textarea {
-    background-color: rgba(255, 255, 255, 0.98) !important; /* Fond bien blanc */
+/* --- CHAMPS DE SAISIE LUMINEUX --- */
+.stTextInput input, .stTextArea textarea, .stSelectbox div {
+    background-color: rgba(255, 255, 255, 0.98) !important;
     color: #0f172a !important;
-    font-weight: 600 !important; /* Écriture plus grasse */
+    font-weight: 600 !important;
     font-size: 1rem !important;
     border: 2px solid #cbd5e1 !important;
     border-radius: 14px !important;
 }
 
 label p {
-    font-weight: 800 !important; /* Titres de champs plus épais */
+    font-weight: 800 !important;
     color: #064e3b !important;
     font-size: 1.05rem !important;
+    margin-bottom: 8px !important;
 }
 
-/* Sidebar plus lisible */
 [data-testid="stSidebar"] {
     background-color: rgba(255, 255, 255, 0.85) !important;
     backdrop-filter: blur(20px);
@@ -118,7 +118,7 @@ label p {
 }
 
 .post-card p {
-    font-weight: 500 !important; /* Texte des posts plus épais */
+    font-weight: 500 !important;
     font-size: 1.1rem !important;
     color: #1e293b;
 }
@@ -193,24 +193,55 @@ if menu == "🔑 Connexion":
                     st.session_state.connecte = True
                     st.session_state.user_info = user
                     st.rerun()
-                else: st.warning("Compte en attente de validation.")
+                else: st.warning("Compte en attente de validation par l'administration.")
             else: st.error("Identifiants incorrects.")
         st.markdown("</div>", unsafe_allow_html=True)
 
 elif menu == "📝 Inscription":
-    st.markdown("<h2 class='gold-text'>Demande d'adhésion</h2>", unsafe_allow_html=True)
-    with st.form("inscription"):
-        col1, col2 = st.columns(2)
-        nom = col1.text_input("Nom")
-        prenom = col2.text_input("Prénom")
-        email = col1.text_input("Email")
-        password = col2.text_input("Mot de passe", type="password")
-        photo = st.file_uploader("Photo de profil", type=['jpg', 'png'])
-        if st.form_submit_button("Envoyer le dossier"):
-            p_url, _ = process_media(photo, is_profile=True)
-            data = {"nom": nom, "prenom": prenom, "email": email, "password": hasher_password(password), "statut": "en_attente", "photo_url": p_url}
-            supabase.table("membres").insert(data).execute()
-            st.success("Dossier envoyé !")
+    st.markdown("<h1 class='gold-text' style='text-align:center;'>🤝 Rejoindre l'AEEMG</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:#475569; font-weight:600;'>Remplissez votre dossier d'adhésion complet.</p>", unsafe_allow_html=True)
+    
+    with st.container():
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        with st.form("inscription", clear_on_submit=False):
+            # Section 1
+            st.markdown("<h4 style='color: #064e3b;'>👤 Identité & Localisation</h4>", unsafe_allow_html=True)
+            c1, c2 = st.columns(2)
+            nom = c1.text_input("Nom de famille")
+            prenom = c2.text_input("Prénom")
+            ville = c1.text_input("Ville de résidence")
+            organe_de_base = c2.text_input("Organe de base")
+            
+            # Section 2
+            st.markdown("<br><h4 style='color: #064e3b;'>🔐 Sécurité</h4>", unsafe_allow_html=True)
+            email = st.text_input("Email")
+            p1, p2 = st.columns(2)
+            password = p1.text_input("Mot de passe", type="password")
+            confirm = p2.text_input("Confirmer le mot de passe", type="password")
+            
+            # Section 3
+            st.markdown("<br><h4 style='color: #064e3b;'>📝 Motivation & Photo</h4>", unsafe_allow_html=True)
+            motivation = st.text_area("Votre motivation")
+            photo = st.file_uploader("Photo d'identité (pour votre carte)", type=['jpg', 'jpeg', 'png'])
+            
+            if st.form_submit_button("🚀 Envoyer mon dossier"):
+                if not all([nom, prenom, email, password, ville, organe_de_base, motivation]) or photo is None:
+                    st.error("⚠️ Tous les champs sont obligatoires.")
+                elif password != confirm:
+                    st.error("❌ Les mots de passe ne correspondent pas.")
+                else:
+                    with st.spinner("Enregistrement..."):
+                        p_url, _ = process_media(photo, is_profile=True)
+                        data = {
+                            "nom": nom.upper(), "prenom": prenom.capitalize(), 
+                            "email": email.lower(), "password": hasher_password(password),
+                            "ville": ville, "organe_de_base": organe_de_base,
+                            "motivation": motivation, "photo_url": p_url, "statut": "en_attente"
+                        }
+                        supabase.table("membres").insert(data).execute()
+                        st.balloons()
+                        st.success("Dossier envoyé avec succès !")
+        st.markdown("</div>", unsafe_allow_html=True)
 
 elif st.session_state.connecte:
     u = st.session_state.user_info
@@ -293,16 +324,15 @@ elif st.session_state.connecte:
                     c1, c2, c3 = st.columns([1, 1, 2])
                     with c1:
                         if st.button(f"❤️ Like", key=f"like_{post['id']}"):
-                            st.toast(f"Coup de cœur sur le post de {post['auteur_nom']} !")
+                            st.toast(f"Vous aimez le post de {post['auteur_nom']} !")
                     with c2:
                         if st.button(f"💬 Commenter", key=f"comm_{post['id']}"):
-                            st.info("La zone de commentaires est en cours de développement.")
+                            st.info("La zone de commentaires arrive très bientôt.")
                     
                     st.markdown("<div style='margin-bottom: 40px;'></div>", unsafe_allow_html=True)
 
     elif menu == "🚪 Déconnexion":
         st.session_state.clear()
         st.rerun()
-
 else:
     st.warning("Veuillez vous connecter pour accéder à votre espace.")
