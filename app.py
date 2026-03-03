@@ -77,12 +77,10 @@ html, body, [class*="st-"] {
 }
 
 /* --- CHAMPS DE SAISIE LUMINEUX --- */
-.stTextInput input, .stTextArea textarea, .stSelectbox div {
+.stTextInput input, .stTextArea textarea, [data-baseweb="select"] {
     background-color: rgba(255, 255, 255, 0.98) !important;
     color: #0f172a !important;
     font-weight: 600 !important;
-    font-size: 1rem !important;
-    border: 2px solid #cbd5e1 !important;
     border-radius: 14px !important;
 }
 
@@ -118,7 +116,7 @@ label p {
 }
 
 .post-card p {
-    font-weight: 500 !important;
+    font-weight: 600 !important;
     font-size: 1.1rem !important;
     color: #1e293b;
 }
@@ -204,24 +202,37 @@ elif menu == "📝 Inscription":
     with st.container():
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
         with st.form("inscription", clear_on_submit=False):
-            # Section 1
+            # Section 1 : Identité
             st.markdown("<h4 style='color: #064e3b;'>👤 Identité & Localisation</h4>", unsafe_allow_html=True)
             c1, c2 = st.columns(2)
-            nom = c1.text_input("Nom de famille")
-            prenom = c2.text_input("Prénom")
-            ville = c1.text_input("Ville de résidence")
-            organe_de_base = c2.text_input("Organe de base")
+            nom = c1.text_input("Nom de famille", placeholder="ex: CAMARA")
+            prenom = c2.text_input("Prénom", placeholder="ex: Mamadou")
+            ville = c1.text_input("Ville de résidence", placeholder="ex: Conakry")
             
-            # Section 2
+            # --- Ton format Selectbox pour l'organe de base ---
+            organe_de_base = c2.selectbox(
+                "Organe de base",
+                [
+                    "Bureau National",
+                    "Section Universitaire",
+                    "Section Scolaire",
+                    "Section Communale",
+                    "Antenne Régionale",
+                ],
+                index=None,
+                placeholder="Sélectionnez un organe..."
+            )
+            
+            # Section 2 : Sécurité
             st.markdown("<br><h4 style='color: #064e3b;'>🔐 Sécurité</h4>", unsafe_allow_html=True)
-            email = st.text_input("Email")
+            email = st.text_input("Email", placeholder="votre@email.com")
             p1, p2 = st.columns(2)
             password = p1.text_input("Mot de passe", type="password")
             confirm = p2.text_input("Confirmer le mot de passe", type="password")
             
-            # Section 3
+            # Section 3 : Motivation
             st.markdown("<br><h4 style='color: #064e3b;'>📝 Motivation & Photo</h4>", unsafe_allow_html=True)
-            motivation = st.text_area("Votre motivation")
+            motivation = st.text_area("Pourquoi souhaitez-vous nous rejoindre ?", placeholder="Décrivez votre motivation...")
             photo = st.file_uploader("Photo d'identité (pour votre carte)", type=['jpg', 'jpeg', 'png'])
             
             if st.form_submit_button("🚀 Envoyer mon dossier"):
@@ -230,17 +241,25 @@ elif menu == "📝 Inscription":
                 elif password != confirm:
                     st.error("❌ Les mots de passe ne correspondent pas.")
                 else:
-                    with st.spinner("Enregistrement..."):
+                    with st.spinner("Enregistrement de votre profil..."):
                         p_url, _ = process_media(photo, is_profile=True)
                         data = {
-                            "nom": nom.upper(), "prenom": prenom.capitalize(), 
-                            "email": email.lower(), "password": hasher_password(password),
-                            "ville": ville, "organe_de_base": organe_de_base,
-                            "motivation": motivation, "photo_url": p_url, "statut": "en_attente"
+                            "nom": nom.upper(), 
+                            "prenom": prenom.capitalize(), 
+                            "email": email.lower(), 
+                            "password": hasher_password(password),
+                            "ville": ville, 
+                            "organe_de_base": organe_de_base,
+                            "motivation": motivation, 
+                            "photo_url": p_url, 
+                            "statut": "en_attente"
                         }
-                        supabase.table("membres").insert(data).execute()
-                        st.balloons()
-                        st.success("Dossier envoyé avec succès !")
+                        try:
+                            supabase.table("membres").insert(data).execute()
+                            st.balloons()
+                            st.success("🎉 Dossier envoyé ! Un administrateur va valider votre compte sous peu.")
+                        except Exception as e:
+                            st.error(f"Erreur technique : {e}")
         st.markdown("</div>", unsafe_allow_html=True)
 
 elif st.session_state.connecte:
@@ -256,7 +275,7 @@ elif st.session_state.connecte:
                      style="width: 130px; height: 130px; border-radius: 50%; border: 5px solid rgba(255,255,255,1); object-fit: cover; box-shadow: 0 8px 15px rgba(0,0,0,0.2); background: white;">
                 <div style="padding-bottom: 12px;">
                     <h1 style="margin: 0; color: #064e3b; font-size: 2.3rem; font-weight: 800;">{u.get('prenom')} {u.get('nom')}</h1>
-                    <p style="margin: 0; color: #334155; font-weight: 700; font-size: 1.1rem;">💎 Membre Actif AEEMG</p>
+                    <p style="margin: 0; color: #334155; font-weight: 700; font-size: 1.1rem;">💎 Membre : {u.get('organe_de_base')}</p>
                 </div>
             </div>
         </div>
@@ -275,6 +294,9 @@ elif st.session_state.connecte:
                         <small style="color: #64748b; font-weight: 600;">Contact</small><br><b>{u.get('email')}</b>
                     </div>
                     <div style="background: rgba(255,255,255,0.8); padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <small style="color: #64748b; font-weight: 600;">Ville</small><br><b>{u.get('ville')}</b>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.8); padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
                         <small style="color: #64748b; font-weight: 600;">État Financier</small><br><b style="color: {'#10b981' if est_a_jour else '#ef4444'};">{statut_badge}</b>
                     </div>
                 </div>
@@ -282,7 +304,6 @@ elif st.session_state.connecte:
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col_feed:
-            # Zone de Publication
             st.markdown("<div class='glass-card' style='padding: 25px;'>", unsafe_allow_html=True)
             with st.form("post_form", clear_on_submit=True):
                 txt = st.text_area("Exprimez-vous", placeholder=f"Quoi de neuf, {u.get('prenom')} ?")
@@ -298,7 +319,6 @@ elif st.session_state.connecte:
                     st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
-            # Fil d'actu
             res_posts = supabase.table("posts").select("*").order("date_pub", desc=True).limit(15).execute()
             for post in res_posts.data:
                 with st.container():
@@ -320,15 +340,13 @@ elif st.session_state.connecte:
                         if post.get("media_type") == "image": st.image(post["media_url"], use_container_width=True)
                         else: st.video(post["media_url"])
                     
-                    # Boutons d'interaction
                     c1, c2, c3 = st.columns([1, 1, 2])
                     with c1:
                         if st.button(f"❤️ Like", key=f"like_{post['id']}"):
                             st.toast(f"Vous aimez le post de {post['auteur_nom']} !")
                     with c2:
                         if st.button(f"💬 Commenter", key=f"comm_{post['id']}"):
-                            st.info("La zone de commentaires arrive très bientôt.")
-                    
+                            st.info("La zone de commentaires arrive bientôt.")
                     st.markdown("<div style='margin-bottom: 40px;'></div>", unsafe_allow_html=True)
 
     elif menu == "🚪 Déconnexion":
