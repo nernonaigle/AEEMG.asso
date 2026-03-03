@@ -33,85 +33,62 @@ def check_cotisation_du_mois(user_id) -> str:
         res = supabase.table("cotisations").select("statut").eq("user_id", user_id).gte("date_paiement", first_day).execute()
         if not res.data: return "non_paye"
         statuts = [r['statut'] for r in res.data]
-        if "valide" in statuts: return "valide"
-        if "en_attente" in statuts: return "en_attente"
-        return "non_paye"
+        return "valide" if "valide" in statuts else ("en_attente" if "en_attente" in statuts else "non_paye")
     except: return "non_paye"
 
-def process_media(file):
-    if file is None: return None, None
-    try:
-        encoded = base64.b64encode(file.read()).decode()
-        return f"data:{file.type};base64,{encoded}", file.type.split("/")[0]
-    except: return None, None
-
 # =========================================================
-# DESIGN "ULTRA-LUMINEUX" (STYLE APPLE/FACEBOOK LIGHT)
+# DESIGN "MODERN GLASS" (STYLE EXACT DE L'IMAGE)
 # =========================================================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
 
-/* Reset global pour éviter le sombre */
+/* FOND D'ÉCRAN AVEC IMAGE */
 .stApp {
-    background: #F0F2F5 !important; /* Gris très clair style Facebook */
-    color: #1c1e21 !important;
+    background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), 
+                url("https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=2000") no-repeat center center fixed;
+    background-size: cover !important;
 }
 
-/* Container principal */
-.main .block-container { max-width: 1100px !important; padding-top: 2rem; }
+/* TYPOGRAPHIE ET COULEURS DE TEXTE */
+html, body, [class*="st-"] { font-family: 'Plus Jakarta Sans', sans-serif; color: #1e293b; }
+h1, h2, h3, h4 { color: white !important; font-weight: 800 !important; }
 
-/* Cartes Blanches Lumineuses */
+/* CARTES BLANCHES (DESIGN DE L'IMAGE) */
 .glass-card {
     background: #FFFFFF !important;
-    border-radius: 16px;
-    padding: 25px;
-    border: 1px solid #E4E6EB;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-    color: #1c1e21 !important;
+    border-radius: 24px !important;
+    padding: 30px !important;
+    border: none !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    margin-bottom: 25px;
+    color: #1e293b !important;
 }
 
-/* Post Card */
-.post-card {
-    background: #FFFFFF !important;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 15px;
-    border: 1px solid #E4E6EB;
-}
-
-/* Badges de Statut */
-.badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 800;
-}
-.bg-success { background: #E7F3FF; color: #1877F2; } /* Bleu/Vert clair */
-.bg-warning { background: #FFF9E0; color: #F7B928; } /* Jaune clair */
-.bg-danger { background: #FFEBEB; color: #FA383E; }  /* Rouge clair */
-
-/* Inputs & Boutons */
-.stTextInput input, .stTextArea textarea, [data-baseweb="select"] {
-    background-color: #F0F2F5 !important;
-    color: #1c1e21 !important;
-    border: 1px solid #E4E6EB !important;
-    border-radius: 10px !important;
-    font-weight: 600 !important;
-}
-
+/* BOUTONS STYLE PILULE (STYLE IMAGE) */
 div.stButton > button {
-    background: #064e3b !important;
+    background: #10b981 !important; /* Vert émeraude */
     color: white !important;
-    border-radius: 8px !important;
+    border-radius: 50px !important;
+    padding: 10px 25px !important;
     font-weight: 700 !important;
     border: none !important;
-    width: 100% !important;
+    transition: 0.3s;
+}
+div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.4); }
+
+/* INPUTS LISIBLES */
+.stTextInput input, .stTextArea textarea {
+    background-color: #f8fafc !important;
+    color: #1e293b !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
 }
 
-/* Sidebar Light */
-[data-testid="stSidebar"] { background-color: #FFFFFF !important; border-right: 1px solid #E4E6EB; }
+/* SIDEBAR MODERNE */
+[data-testid="stSidebar"] { background-color: rgba(255, 255, 255, 0.05) !important; backdrop-filter: blur(10px); border-right: 1px solid rgba(255, 255, 255, 0.1); }
+[data-testid="stSidebarNav"] span { color: white !important; font-weight: 600; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -121,40 +98,44 @@ div.stButton > button {
 if "connecte" not in st.session_state: st.session_state.connecte = False
 
 with st.sidebar:
-    st.markdown("<h1 style='text-align:center; color:#064e3b;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align:center; font-size: 1.5rem;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
     if st.session_state.connecte:
-        menu = st.radio("Navigation", ["🏠 Fil d'actualité", "💳 Cotisations", "🪪 Carte de Membre", "🚪 Déconnexion"])
+        menu = st.radio("MENU", ["🏠 Fil d'actualité", "💳 Cotisations", "🪪 Ma Carte", "🚪 Déconnexion"])
     else:
-        menu = st.radio("Accès", ["🔑 Connexion", "📝 Inscription"])
+        menu = st.radio("ACCÈS", ["🔑 Connexion", "📝 Inscription"])
 
 # =========================================================
 # PAGES
 # =========================================================
 if not st.session_state.connecte:
     if menu == "🔑 Connexion":
-        st.markdown("<div class='glass-card' style='max-width:500px; margin:auto;'>", unsafe_allow_html=True)
-        st.markdown("<h2 style='text-align:center; color:#064e3b;'>Connexion</h2>", unsafe_allow_html=True)
-        em = st.text_input("Email")
-        pw = st.text_input("Mot de passe", type="password")
-        if st.button("Se connecter"):
-            res = supabase.table("membres").select("*").eq("email", em).eq("password", hasher_password(pw)).execute()
-            if res.data and res.data[0].get("statut") == "approuve":
-                st.session_state.connecte, st.session_state.user_info = True, res.data[0]
-                st.rerun()
-            else: st.error("Accès refusé.")
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align:center;'>Fil d'actualité</h1>", unsafe_allow_html=True)
+        col_c, col_v = st.columns([1, 1])
+        with col_c:
+            st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+            st.markdown("<h3 style='color:#1e293b !important;'>Se connecter</h3>", unsafe_allow_html=True)
+            em = st.text_input("VOTRE EMAIL")
+            pw = st.text_input("MOT DE PASSE", type="password")
+            if st.button("Se connecter"):
+                res = supabase.table("membres").select("*").eq("email", em).eq("password", hasher_password(pw)).execute()
+                if res.data and res.data[0].get("statut") == "approuve":
+                    st.session_state.connecte, st.session_state.user_info = True, res.data[0]
+                    st.rerun()
+                else: st.error("Identifiants incorrects ou compte non validé.")
+            st.markdown("</div>", unsafe_allow_html=True)
     
     elif menu == "📝 Inscription":
+        st.markdown("<h1>Rejoindre l'AEEMG</h1>", unsafe_allow_html=True)
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
         with st.form("reg"):
             c1, c2 = st.columns(2)
-            n, p = c1.text_input("Nom"), c2.text_input("Prénom")
-            v, o = c1.text_input("Ville"), c2.selectbox("Organe", ["National", "Universitaire", "Scolaire"])
-            e, pw = st.text_input("Email"), st.text_input("Pass", type="password")
-            if st.form_submit_button("S'inscrire"):
+            n, p = c1.text_input("NOM"), c2.text_input("PRÉNOM")
+            v, o = c1.text_input("VILLE"), c2.selectbox("ORGANE", ["National", "Universitaire", "Scolaire"])
+            e, pw = st.text_input("EMAIL"), st.text_input("MOT DE PASSE", type="password")
+            if st.form_submit_button("S'INSCRIRE"):
                 data = {"nom": n.upper(), "prenom": p.capitalize(), "email": e.lower(), "password": hasher_password(pw), "ville": v, "organe_de_base": o, "statut": "en_attente"}
                 supabase.table("membres").insert(data).execute()
-                st.success("Demande envoyée !")
+                st.success("Dossier envoyé !")
         st.markdown("</div>", unsafe_allow_html=True)
 
 else:
@@ -162,55 +143,37 @@ else:
     c_status = check_cotisation_du_mois(u['id'])
     
     if menu == "🏠 Fil d'actualité":
-        # HEADER PROFIL FACEBOOK STYLE
-        badge_html = f'<span class="badge bg-success">À Jour</span>' if c_status == "valide" else (f'<span class="badge bg-warning">En attente</span>' if c_status == "en_attente" else f'<span class="badge bg-danger">Non Payé</span>')
+        st.markdown(f"<h1>Bienvenue, {u['prenom']}</h1>", unsafe_allow_html=True)
         
-        st.markdown(f"""
-        <div style="background: white; border-radius: 0 0 15px 15px; border: 1px solid #E4E6EB; margin-bottom: 20px;">
-            <div style="height: 150px; background: linear-gradient(90deg, #064e3b, #D4AF37); border-radius: 15px 15px 0 0;"></div>
-            <div style="padding: 20px; display: flex; align-items: center; gap: 20px; margin-top: -50px;">
-                <img src="https://www.w3schools.com/howto/img_avatar.png" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid white; background: white;">
-                <div style="margin-top: 30px;">
-                    <h2 style="margin:0; color:#1c1e21;">{u['prenom']} {u['nom']}</h2>
-                    <p style="margin:0; color:#65676b; font-weight:600;">{u['organe_de_base']} • {badge_html}</p>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        col_l, col_r = st.columns([1, 1.8])
+        col_l, col_r = st.columns([1, 1.5])
+        
         with col_l:
-            st.markdown(f"<div class='glass-card'><h4>Infos</h4><b>Ville:</b> {u['ville']}<br><b>Email:</b> {u['email']}</div>", unsafe_allow_html=True)
-            if c_status != "valide":
-                st.warning("Pensez à régulariser votre cotisation !")
+            st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color:#1e293b !important;'>Votre Profil</h3>", unsafe_allow_html=True)
+            st.write(f"**Organe:** {u['organe_de_base']}")
+            st.write(f"**Ville:** {u['ville']}")
+            status_color = "#10b981" if c_status == "valide" else "#f59e0b"
+            st.markdown(f"**Cotisation:** <span style='color:{status_color}; font-weight:800;'>{c_status.upper()}</span>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
         with col_r:
-            with st.form("post", clear_on_submit=True):
-                t = st.text_area("Quoi de neuf ?", placeholder=f"Exprimez-vous {u['prenom']}...")
-                if st.form_submit_button("Publier"):
-                    supabase.table("posts").insert({"user_id": u['id'], "auteur_nom": f"{u['prenom']} {u['nom']}", "contenu": t, "date_pub": datetime.now().isoformat()}).execute()
-                    st.rerun()
-            
-            # Posts
-            posts = supabase.table("posts").select("*").order("date_pub", desc=True).limit(5).execute()
-            for p in posts.data:
-                st.markdown(f"<div class='post-card'><b>{p['auteur_nom']}</b><br><small>{p['date_pub'][:10]}</small><p>{p['contenu']}</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+            st.markdown("<h3 style='color:#1e293b !important;'>Cotisations</h3>", unsafe_allow_html=True)
+            st.write("Vérifiez votre statut du mois et générez votre carte.")
+            if st.button("Vérifier mes paiements"):
+                st.info("Redirection vers l'onglet Cotisation...")
+            st.markdown("</div>", unsafe_allow_html=True)
 
     elif menu == "💳 Cotisations":
-        st.markdown(f"### Cotisation de {calendar.month_name[date.today().month]}")
+        st.markdown("<h1>Cotisations du mois</h1>", unsafe_allow_html=True)
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
         with st.form("pay"):
-            mt = st.number_input("Montant (GNF)", value=5000)
-            rf = st.text_input("Référence de transaction (Orange/Momo)")
-            if st.form_submit_button("Envoyer la preuve"):
+            mt = st.number_input("MONTANT GNF", value=5000)
+            rf = st.text_input("RÉFÉRENCE DE TRANSACTION")
+            if st.form_submit_button("ENVOYER LA PREUVE"):
                 supabase.table("cotisations").insert({"user_id": u['id'], "montant": mt, "reference": rf, "statut": "en_attente", "date_paiement": datetime.now().isoformat()}).execute()
-                st.success("Preuve envoyée à l'administration !")
+                st.success("Preuve enregistrée !")
         st.markdown("</div>", unsafe_allow_html=True)
-        
-        st.markdown("#### Historique")
-        hist = supabase.table("cotisations").select("*").eq("user_id", u['id']).execute()
-        for h in hist.data:
-            st.info(f"{h['date_paiement'][:10]} - {h['montant']} GNF - Statut: {h['statut']}")
 
     elif menu == "🚪 Déconnexion":
         st.session_state.clear()
