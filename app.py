@@ -59,19 +59,22 @@ def process_media(file, is_profile=False):
         return None, None
 
 # =========================================================
-# DESIGN / CSS HAUTE VISIBILITÉ
+# DESIGN / CSS HAUTE PERFORMANCE (DIMENSIONS & VISIBILITÉ)
 # =========================================================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
 
-/* Style global amélioré */
 html, body, [class*="st-"] { 
     font-family: 'Plus Jakarta Sans', sans-serif; 
-    font-size: 1.05rem;
 }
 
-.main .block-container { max-width: 1100px; padding-top: 2rem; }
+/* --- AJUSTEMENT LARGEUR ET LONGUEUR DU CONTENU --- */
+.main .block-container { 
+    max-width: 1000px !important; /* Réduit la largeur pour éviter l'étirement */
+    padding-top: 2rem;
+    padding-bottom: 5rem;
+}
 
 .stApp {
     background: linear-gradient(135deg, rgba(255,255,255,0.5), rgba(255,255,255,0.7)),
@@ -79,50 +82,37 @@ html, body, [class*="st-"] {
     background-size: cover !important;
 }
 
-/* --- SIDEBAR CLAIRE & TEXTE GRAS --- */
-[data-testid="stSidebar"] { 
-    background-color: #ffffff !important; 
-    border-right: 2px solid #edf2f7; 
-}
-[data-testid="stSidebar"] .st-emotion-cache-1647it7, [data-testid="stSidebar"] p, [data-testid="stSidebar"] span { 
-    color: #000000 !important; 
-    font-weight: 700 !important; 
-    font-size: 1.1rem !important;
-}
-
-/* --- CHAMPS DE SAISIE HAUTE VISIBILITÉ --- */
+/* --- CHAMPS DE SAISIE (PLUS LONGS ET LISIBLES) --- */
 .stTextInput input, .stTextArea textarea, [data-baseweb="select"] {
     background-color: #ffffff !important;
     color: #000000 !important;
-    font-weight: 700 !important; /* Texte bien gras */
+    font-weight: 700 !important;
     font-size: 1.1rem !important;
-    border: 2px solid #1a202c !important; /* Bordure foncée pour contraste */
-    border-radius: 12px !important;
-    padding: 12px !important;
+    border: 2px solid #000000 !important; /* Bordure noire pour un max de contraste */
+    border-radius: 14px !important;
+    padding: 15px !important; /* Augmente la "longueur" visuelle du champ */
 }
 
-/* Correction spécifique pour le texte dans la Selectbox Organe */
 div[data-baseweb="select"] > div {
     color: #000000 !important;
     font-weight: 700 !important;
 }
 
-/* Titres des champs */
 label p { 
     font-weight: 800 !important; 
     color: #064e3b !important; 
     font-size: 1.1rem !important;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    margin-bottom: 10px !important;
 }
 
+/* --- CARTES ET POSTS --- */
 .glass-card {
     background: rgba(255, 255, 255, 0.98);
-    border-radius: 20px;
-    padding: 30px;
+    border-radius: 24px;
+    padding: 35px;
     border: 1px solid #cbd5e1;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-    margin-bottom: 25px;
+    margin-bottom: 30px;
 }
 
 .post-card {
@@ -131,14 +121,13 @@ label p {
     padding: 25px;
     border: 1px solid #e2e8f0;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 }
 
-.post-content {
+.post-text {
     color: #000000 !important;
     font-size: 1.15rem !important;
     font-weight: 600 !important;
-    line-height: 1.6;
     margin: 15px 0;
 }
 
@@ -147,10 +136,9 @@ label p {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 800;
-    font-size: 2.2rem;
 }
 
-/* Boutons principaux */
+/* --- BOUTONS --- */
 div.stButton > button {
     border-radius: 12px;
     background: #064e3b;
@@ -159,12 +147,21 @@ div.stButton > button {
     font-size: 1.1rem;
     height: 3.5rem;
     border: none;
-    transition: all 0.3s;
+    width: 100%;
 }
 
 div.stButton > button:hover {
     background: #D4AF37;
-    transform: scale(1.02);
+}
+
+/* --- SIDEBAR --- */
+[data-testid="stSidebar"] { 
+    background-color: #ffffff !important; 
+    border-right: 2px solid #edf2f7; 
+}
+[data-testid="stSidebar"] p, [data-testid="stSidebar"] span { 
+    color: #000000 !important; 
+    font-weight: 700 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -179,10 +176,9 @@ if "user_info" not in st.session_state: st.session_state.user_info = None
 # SIDEBAR
 # =========================================================
 with st.sidebar:
-    st.markdown("<h1 style='text-align:center; color:#064e3b; font-size: 1.8rem;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align:center; color:#064e3b;'>🌙 AEEMG</h1>", unsafe_allow_html=True)
     if st.session_state.connecte:
         u = st.session_state.user_info
-        st.markdown(f"<div style='text-align:center; padding: 10px; border: 2px solid #D4AF37; border-radius: 15px;'>Bonjour,<br><b>{u['prenom']}</b></div>", unsafe_allow_html=True)
         st.write("---")
         menu = st.radio("Navigation", ["🏠 Tableau de Bord", "💳 Cotisations", "🪪 Carte de Membre", "📂 Documents", "🚪 Déconnexion"])
     else:
@@ -205,12 +201,12 @@ if menu == "🔑 Connexion":
                     st.session_state.connecte = True
                     st.session_state.user_info = user
                     st.rerun()
-                else: st.warning("Compte en attente de validation par l'admin.")
+                else: st.warning("Compte en attente de validation.")
             else: st.error("Identifiants incorrects.")
         st.markdown("</div>", unsafe_allow_html=True)
 
 elif menu == "📝 Inscription":
-    st.markdown("<h1 class='gold-text' style='text-align:center;'>🤝 INSCRIPTION</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='gold-text' style='text-align:center;'>🤝 REJOINDRE L'AEEMG</h1>", unsafe_allow_html=True)
     with st.container():
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
         with st.form("inscription"):
@@ -218,20 +214,22 @@ elif menu == "📝 Inscription":
             nom = c1.text_input("NOM DE FAMILLE")
             prenom = c2.text_input("PRÉNOM")
             ville = c1.text_input("VILLE DE RÉSIDENCE")
-            organe_de_base = c2.selectbox("ORGANE DE BASE", ["Bureau National", "Section Universitaire", "Section Scolaire", "Section Communale", "Antenne Régionale"], index=None, placeholder="Choisir...")
+            organe_de_base = c2.selectbox("ORGANE DE BASE", ["Bureau National", "Section Universitaire", "Section Scolaire", "Section Communale", "Antenne Régionale"], index=None)
             email = st.text_input("EMAIL")
             p1, p2 = st.columns(2)
-            password = p1.text_input("CRÉER UN MOT DE PASSE", type="password")
-            confirm = p2.text_input("CONFIRMER LE MOT DE PASSE", type="password")
-            motivation = st.text_area("VOTRE MOTIVATION")
+            password = p1.text_input("MOT DE PASSE", type="password")
+            confirm = p2.text_input("CONFIRMATION", type="password")
+            motivation = st.text_area("MOTIVATION")
             
-            if st.form_submit_button("🚀 VALIDER MON INSCRIPTION"):
-                if not all([nom, prenom, email, password, ville, organe_de_base]): st.error("⚠️ Remplissez tous les champs !")
-                elif password != confirm: st.error("❌ Mots de passe non identiques.")
+            # Plus de champ photo ici comme demandé 🙃
+            
+            if st.form_submit_button("🚀 ENVOYER LE DOSSIER"):
+                if not all([nom, prenom, email, password, ville, organe_de_base]): st.error("⚠️ Remplissez tout !")
+                elif password != confirm: st.error("❌ Mots de passe différents !")
                 else:
                     data = {"nom": nom.upper(), "prenom": prenom.capitalize(), "email": email.lower(), "password": hasher_password(password), "ville": ville, "organe_de_base": organe_de_base, "motivation": motivation, "statut": "en_attente"}
                     supabase.table("membres").insert(data).execute()
-                    st.success("✅ Dossier envoyé ! Attendez la validation.")
+                    st.success("✅ Dossier envoyé !")
         st.markdown("</div>", unsafe_allow_html=True)
 
 elif st.session_state.connecte:
@@ -241,12 +239,12 @@ elif st.session_state.connecte:
         # HEADER SOCIAL
         st.markdown(f"""
         <div style="position: relative; margin-bottom: 80px;">
-            <div style="height: 200px; background: linear-gradient(90deg, #064e3b, #D4AF37); border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);"></div>
+            <div style="height: 180px; background: linear-gradient(90deg, #064e3b, #D4AF37); border-radius: 20px;"></div>
             <div style="position: absolute; bottom: -40px; left: 30px; display: flex; align-items: flex-end; gap: 20px;">
-                <img src="{u.get('photo_url') or 'https://www.w3schools.com/howto/img_avatar.png'}" style="width: 130px; height: 130px; border-radius: 50%; border: 6px solid white; object-fit: cover; background: white; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
-                <div style="padding-bottom: 15px;">
-                    <h1 style="margin: 0; color: #064e3b; font-size: 2.2rem; font-weight: 800;">{u.get('prenom')} {u.get('nom')}</h1>
-                    <p style="margin: 0; font-weight: 800; color: #1e293b; font-size: 1.2rem;">⭐ {u.get('organe_de_base')}</p>
+                <img src="{u.get('photo_url') or 'https://www.w3schools.com/howto/img_avatar.png'}" style="width: 120px; height: 120px; border-radius: 50%; border: 5px solid white; object-fit: cover; background: white;">
+                <div style="padding-bottom: 10px;">
+                    <h1 style="margin: 0; color: #064e3b; font-size: 2rem; font-weight: 800;">{u.get('prenom')} {u.get('nom')}</h1>
+                    <p style="margin: 0; font-weight: 800; color: #1e293b;">⭐ {u.get('organe_de_base')}</p>
                 </div>
             </div>
         </div>
@@ -256,53 +254,54 @@ elif st.session_state.connecte:
 
         with col_left:
             st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-            st.markdown("### 📌 INFORMATIONS")
-            st.markdown(f"**📧 Email:** {u.get('email')}")
-            st.markdown(f"**🏙️ Ville:** {u.get('ville')}")
+            st.markdown("### 📌 INFOS")
+            st.markdown(f"**Email:** {u.get('email')}")
+            st.markdown(f"**Ville:** {u.get('ville')}")
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col_right:
-            # PUBLICATION
+            # ZONE DE PUBLICATION
             st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
             with st.form("post_form", clear_on_submit=True):
                 txt = st.text_area("EXPRIMEZ-VOUS...", placeholder=f"Quoi de neuf, {u.get('prenom')} ?")
                 media = st.file_uploader("AJOUTER IMAGE/VIDÉO", type=['jpg','png','mp4'])
-                if st.form_submit_button("🚀 PUBLIER SUR MON MUR"):
+                if st.form_submit_button("🚀 PUBLIER"):
                     m_url, m_type = process_media(media)
                     new_post = {"user_id": u['id'], "auteur_nom": f"{u['prenom']} {u['nom']}", "auteur_photo": u.get("photo_url"), "contenu": txt, "media_url": m_url, "media_type": m_type, "date_pub": datetime.now().isoformat()}
                     supabase.table("posts").insert(new_post).execute()
                     st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
-            # FLUX SOCIAL (POSTS)
-            res_posts = supabase.table("posts").select("*").order("date_pub", desc=True).limit(15).execute()
+            # FILUX DE PUBLICATIONS AVEC LIKE/COMM
+            res_posts = supabase.table("posts").select("*").order("date_pub", desc=True).limit(10).execute()
             for post in res_posts.data:
-                st.markdown(f"""
-                <div class="post-card">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <img src="{post.get('auteur_photo') or 'https://www.w3schools.com/howto/img_avatar.png'}" style="width:55px; height:55px; border-radius:50%; object-fit: cover; border: 2px solid #D4AF37;">
-                        <div>
-                            <b style="font-size: 1.2rem; color: #064e3b;">{post.get('auteur_nom')}</b><br>
-                            <small style="color: #64748b; font-weight: 600;">{post.get('date_pub')[:10]}</small>
+                with st.container():
+                    st.markdown(f"""
+                    <div class="post-card">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img src="{post.get('auteur_photo') or 'https://www.w3schools.com/howto/img_avatar.png'}" style="width:50px; height:50px; border-radius:50%; object-fit: cover; border: 2px solid #D4AF37;">
+                            <div>
+                                <b style="font-size: 1.1rem; color: #064e3b;">{post.get('auteur_nom')}</b><br>
+                                <small style="color: #64748b;">{post.get('date_pub')[:10]}</small>
+                            </div>
                         </div>
-                    </div>
-                    <div class="post-content">{post.get('contenu')}</div>
-                """, unsafe_allow_html=True)
-                
-                if post.get("media_url"):
-                    if post.get("media_type") == "image": st.image(post["media_url"], use_container_width=True)
-                    else: st.video(post["media_url"])
-                
-                # BOUTONS ACTIONS (LIKE & COMMENTAIRE)
-                st.markdown("---")
-                c_lk, c_cm, c_sp = st.columns([1, 1, 2])
-                with c_lk:
-                    if st.button(f"❤️ J'aime", key=f"lk_{post['id']}"):
-                        st.toast(f"Vous aimez le post de {post['auteur_nom']} !")
-                with c_cm:
-                    if st.button(f"💬 Commenter", key=f"cm_{post['id']}"):
-                        st.info("Espace commentaire bientôt disponible.")
-                st.markdown("</div><br>", unsafe_allow_html=True)
+                        <div class="post-text">{post.get('contenu')}</div>
+                    """, unsafe_allow_html=True)
+                    
+                    if post.get("media_url"):
+                        if post.get("media_type") == "image": st.image(post["media_url"], use_container_width=True)
+                        else: st.video(post["media_url"])
+                    
+                    # --- RESTAURATION DES BOUTONS LIKE ET COMMENTAIRE ---
+                    st.markdown("<hr style='margin: 15px 0; opacity: 0.2;'>", unsafe_allow_html=True)
+                    c_lk, c_cm, c_void = st.columns([1, 1, 1.5])
+                    with c_lk:
+                        if st.button(f"❤️ J'aime", key=f"lk_{post['id']}"):
+                            st.toast(f"Vous aimez le post de {post['auteur_nom']} !")
+                    with c_cm:
+                        if st.button(f"💬 Commenter", key=f"cm_{post['id']}"):
+                            st.info("Espace commentaire bientôt disponible.")
+                    st.markdown("</div>", unsafe_allow_html=True)
 
     elif menu == "🚪 Déconnexion":
         st.session_state.clear()
